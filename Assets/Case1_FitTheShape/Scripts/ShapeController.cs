@@ -48,6 +48,10 @@ public sealed class ShapeController : MonoBehaviour
     [Tooltip("Uçuş başladığında şeklin doğrudan child objelerini gizler. Gölge/alt katman için kullanılır.")]
     [SerializeField] private bool hideDirectChildrenOnFlight = true;
 
+    [Header("Audio")]
+    [SerializeField] private string clickSfxId = "fittheshape_click";
+    [SerializeField, Range(0f, 1f)] private float clickSfxVolume = 1f;
+
     [Header("Events")]
     [SerializeField] private UnityEvent onArrived;
 
@@ -159,6 +163,7 @@ public sealed class ShapeController : MonoBehaviour
         isFlying = true;
         clickCollider.enabled = false;
         HideDirectChildren();
+        PlayClickSfx();
 
         var startPosition = transform.position;
         var endPosition = target.position;
@@ -249,6 +254,14 @@ public sealed class ShapeController : MonoBehaviour
             directChildObjects[index] = childObject;
             childInitialActiveStates[index] = childObject.activeSelf;
         }
+    }
+
+    private void PlayClickSfx()
+    {
+        if (AudioManager.Instance == null || string.IsNullOrWhiteSpace(clickSfxId))
+            return;
+
+        AudioManager.Instance.PlaySfx(clickSfxId, clickSfxVolume);
     }
 
     private void HideDirectChildren()

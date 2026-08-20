@@ -994,6 +994,60 @@ Transform:
   m_CorrespondingSourceObject: {fileID: 6371146750105926131, guid: 5c44bc22f023b4a36b87e16c656406d4, type: 3}
   m_PrefabInstance: {fileID: 108227019}
   m_PrefabAsset: {fileID: 0}
+--- !u!1 &130937815
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 130937816}
+  - component: {fileID: 130937817}
+  m_Layer: 0
+  m_Name: AudioManager
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!4 &130937816
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 130937815}
+  serializedVersion: 2
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 0, y: -0, z: 0}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 0}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!114 &130937817
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 130937815}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 0f2c875f2445f4650b623c10393021e9, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::AudioManager
+  initialSourceCount: 8
+  sfx:
+  - id: fittheshape_click
+    clip: {fileID: 8300000, guid: db024b3a041e24000bc3d8ddedacf59e, type: 3}
+    volume: 1
+    pitchRange: {x: 1, y: 1}
+  - id: fittheshape_wave
+    clip: {fileID: 8300000, guid: 54bccd4f9d5a04dfd96d2aaf5af92699, type: 3}
+    volume: 1
+    pitchRange: {x: 1, y: 1}
 --- !u!1001 &155715531
 PrefabInstance:
   m_ObjectHideFlags: 0
@@ -1789,7 +1843,7 @@ Transform:
   m_GameObject: {fileID: 481692662}
   serializedVersion: 2
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: 0.87696, y: 0, z: 2.144}
+  m_LocalPosition: {x: 0, y: 0, z: 0}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children: []
@@ -2701,10 +2755,16 @@ MonoBehaviour:
   holeTransform: {fileID: 542028625}
   vfxAnchor: {fileID: 0}
   arrivalVfxPoolId: MiniConfetti
+  arrivalSfxId: fittheshape_wave
+  arrivalSfxVolume: 1
   horizontalStretchMultiplier: 1.18
   stretchDuration: 0.1
   returnDuration: 0.14
   stretchAdjacentSegments: 1
+  dominoReach: 4
+  playDiagonalRipple: 1
+  diagonalRippleDelay: 0.25
+  diagonalRippleReach: 4
 --- !u!1001 &622931402
 PrefabInstance:
   m_ObjectHideFlags: 0
@@ -3210,6 +3270,8 @@ MonoBehaviour:
   rotateAroundLocalYDuringFlight: 1
   localYRotationSpeed: 360
   hideDirectChildrenOnFlight: 1
+  clickSfxId: fittheshape_click
+  clickSfxVolume: 1
   onArrived:
     m_PersistentCalls:
       m_Calls: []
@@ -4245,10 +4307,16 @@ MonoBehaviour:
   holeTransform: {fileID: 998315223}
   vfxAnchor: {fileID: 0}
   arrivalVfxPoolId: MiniConfetti
+  arrivalSfxId: fittheshape_wave
+  arrivalSfxVolume: 1
   horizontalStretchMultiplier: 1.18
   stretchDuration: 0.1
   returnDuration: 0.14
   stretchAdjacentSegments: 1
+  dominoReach: 4
+  playDiagonalRipple: 1
+  diagonalRippleDelay: 0.25
+  diagonalRippleReach: 4
 --- !u!1001 &1106214314
 PrefabInstance:
   m_ObjectHideFlags: 0
@@ -5264,6 +5332,7 @@ GameObject:
   - component: {fileID: 1297003750}
   - component: {fileID: 1297003749}
   - component: {fileID: 1297003748}
+  - component: {fileID: 1297003751}
   m_Layer: 0
   m_Name: Main Camera
   m_TagString: MainCamera
@@ -5381,6 +5450,14 @@ Transform:
   m_Children: []
   m_Father: {fileID: 0}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!81 &1297003751
+AudioListener:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1297003747}
+  m_Enabled: 1
 --- !u!1001 &1336791300
 PrefabInstance:
   m_ObjectHideFlags: 0
@@ -6031,6 +6108,37 @@ Transform:
   m_CorrespondingSourceObject: {fileID: 6371146750105926131, guid: 5c44bc22f023b4a36b87e16c656406d4, type: 3}
   m_PrefabInstance: {fileID: 1418588280}
   m_PrefabAsset: {fileID: 0}
+--- !u!1 &1425631017
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 1425631018}
+  m_Layer: 0
+  m_Name: ---**********---
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!4 &1425631018
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1425631017}
+  serializedVersion: 2
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 0, y: -0, z: 0}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 0}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!1001 &1431382931
 PrefabInstance:
   m_ObjectHideFlags: 0
@@ -7100,6 +7208,8 @@ MonoBehaviour:
   rotateAroundLocalYDuringFlight: 1
   localYRotationSpeed: 360
   hideDirectChildrenOnFlight: 1
+  clickSfxId: fittheshape_click
+  clickSfxVolume: 1
   onArrived:
     m_PersistentCalls:
       m_Calls: []
@@ -7430,6 +7540,8 @@ MonoBehaviour:
   rotateAroundLocalYDuringFlight: 1
   localYRotationSpeed: 360
   hideDirectChildrenOnFlight: 1
+  clickSfxId: fittheshape_click
+  clickSfxVolume: 1
   onArrived:
     m_PersistentCalls:
       m_Calls: []
@@ -7753,6 +7865,37 @@ Transform:
   m_CorrespondingSourceObject: {fileID: 6371146750105926131, guid: 5c44bc22f023b4a36b87e16c656406d4, type: 3}
   m_PrefabInstance: {fileID: 1770710754}
   m_PrefabAsset: {fileID: 0}
+--- !u!1 &1799194624
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 1799194625}
+  m_Layer: 0
+  m_Name: ---MANAGERS---
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!4 &1799194625
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1799194624}
+  serializedVersion: 2
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: -3.16196, y: -0, z: 2.31386}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 0}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!1001 &1817100040
 PrefabInstance:
   m_ObjectHideFlags: 0
@@ -8199,10 +8342,16 @@ MonoBehaviour:
   holeTransform: {fileID: 1875235815}
   vfxAnchor: {fileID: 529020766}
   arrivalVfxPoolId: MiniConfetti
+  arrivalSfxId: fittheshape_wave
+  arrivalSfxVolume: 1
   horizontalStretchMultiplier: 1.18
   stretchDuration: 0.1
   returnDuration: 0.14
   stretchAdjacentSegments: 1
+  dominoReach: 4
+  playDiagonalRipple: 1
+  diagonalRippleDelay: 0.25
+  diagonalRippleReach: 4
 --- !u!1001 &1893699800
 PrefabInstance:
   m_ObjectHideFlags: 0
@@ -9656,6 +9805,10 @@ Transform:
 SceneRoots:
   m_ObjectHideFlags: 0
   m_Roots:
+  - {fileID: 1799194625}
+  - {fileID: 481692664}
+  - {fileID: 130937816}
+  - {fileID: 1425631018}
   - {fileID: 1297003750}
   - {fileID: 1563593040}
   - {fileID: 1847992293}
@@ -9664,4 +9817,3 @@ SceneRoots:
   - {fileID: 348395698}
   - {fileID: 2051221522}
   - {fileID: 1529765969}
-  - {fileID: 481692664}

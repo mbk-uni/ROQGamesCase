@@ -25,6 +25,10 @@ public sealed class SegmentController : MonoBehaviour
     [Tooltip("PoolManager içindeki VFX havuz adı.")]
     [SerializeField] private string arrivalVfxPoolId = "MiniConfetti";
 
+    [Header("Arrival Audio")]
+    [SerializeField] private string arrivalSfxId = "fittheshape_wave";
+    [SerializeField, Range(0f, 1f)] private float arrivalSfxVolume = 1f;
+
     [Header("Arrival Feedback")]
     [Tooltip("Main Transform'un local X eksenindeki en büyük ölçek çarpanı.")]
     [SerializeField, Min(1f)] private float horizontalStretchMultiplier = 1.18f;
@@ -94,6 +98,7 @@ public sealed class SegmentController : MonoBehaviour
             return;
 
         PlayArrivalVfx();
+        PlayArrivalSfx();
         StartDiagonalRipple();
         stretchTween?.Kill();
         mainTransform.localScale = mainInitialScale;
@@ -114,6 +119,15 @@ public sealed class SegmentController : MonoBehaviour
             return;
 
         PoolManager.Instance.PlayVfx(arrivalVfxPoolId, spawnAnchor.position, spawnAnchor.rotation);
+    }
+
+    private void PlayArrivalSfx()
+    {
+        var spawnAnchor = VfxAnchor;
+        if (AudioManager.Instance == null || spawnAnchor == null || string.IsNullOrWhiteSpace(arrivalSfxId))
+            return;
+
+        AudioManager.Instance.PlaySfx(arrivalSfxId, arrivalSfxVolume);
     }
 
     private void PlayDominoWave()
