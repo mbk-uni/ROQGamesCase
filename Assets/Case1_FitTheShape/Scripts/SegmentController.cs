@@ -24,8 +24,10 @@ public sealed class SegmentController : MonoBehaviour
     [SerializeField] private Transform vfxAnchor;
 
     [Header("Arrival VFX")]
-    [Tooltip("PoolManager içindeki VFX havuz adı.")]
+    [Tooltip("PoolManager içindeki ana VFX havuz adı.")]
     [SerializeField] private string arrivalVfxPoolId = "MiniConfetti";
+    [Tooltip("Ana VFX ile aynı anda ve aynı VFX Anchor konumunda oynatılacak impact havuzu.")]
+    [SerializeField] private string impactVfxPoolId = "ImpactBurst";
 
     [Header("Arrival Audio")]
     [SerializeField] private string arrivalSfxId = "fittheshape_wave";
@@ -37,6 +39,10 @@ public sealed class SegmentController : MonoBehaviour
     [SerializeField, Min(1f)] private float scaleMultiplier = 1.18f;
     [SerializeField, Min(0.01f)] private float stretchDuration = 0.1f;
     [SerializeField, Min(0.01f)] private float returnDuration = 0.14f;
+
+    [Header("Wave Falloff")]
+    [Tooltip("Dalga her komşu halkasında ne kadar zayıflar. 0.65: ikinci halka merkezdeki ek büyümenin %65'ini, üçüncü halka %42'sini alır.")]
+    [SerializeField, Range(0.01f, 0.99f)] private float waveStrengthFalloffPerStep = 0.65f;
 
     private Vector3 mainInitialScale;
     private Tween stretchTween;
@@ -95,10 +101,19 @@ public sealed class SegmentController : MonoBehaviour
     private void PlayArrivalVfx()
     {
         var spawnAnchor = VfxAnchor;
-        if (PoolManager.Instance == null || spawnAnchor == null || string.IsNullOrWhiteSpace(arrivalVfxPoolId))
+        if (PoolManager.Instance == null || spawnAnchor == null)
             return;
 
-        PoolManager.Instance.PlayVfx(arrivalVfxPoolId, spawnAnchor.position, spawnAnchor.rotation);
+        PlayPooledVfx(arrivalVfxPoolId, spawnAnchor);
+        PlayPooledVfx(impactVfxPoolId, spawnAnchor);
+    }
+
+    private static void PlayPooledVfx(string poolId, Transform spawnAnchor)
+    {
+        if (string.IsNullOrWhiteSpace(poolId))
+            return;
+
+        PoolManager.Instance.PlayVfx(poolId, spawnAnchor.position, spawnAnchor.rotation);
     }
 
     private void PlayArrivalSfx()
@@ -117,10 +132,10 @@ public sealed class SegmentController : MonoBehaviour
 
         waveVisitedSegments.Clear();
         waveVisitedSegments.Add(mainTransform);
-        PropagateWaveFrom(column, row);
+        PropagateWaveFrom(column, row, 1);
     }
 
-    private void PropagateWaveFrom(int originColumn, int originRow)
+    private void PropagateWaveFrom(int originColumn, int originRow, int waveDepth)
     {
         foreach (var direction in AdjacentOffsets)
         {
@@ -130,13 +145,29 @@ public sealed class SegmentController : MonoBehaviour
             if (neighbour == null || !waveVisitedSegments.Add(neighbour))
                 continue;
 
-            PlayStretch(neighbour, neighbour.localScale, () => PropagateWaveFrom(column, row));
+            var neighbourScaleMultiplier = GetWaveScaleMultiplier(waveDepth);
+            PlayStretch(
+                neighbour,
+                neighbour.localScale,
+                neighbourScaleMultiplier,
+                () => PropagateWaveFrom(column, row, waveDepth + 1));
         }
     }
 
-    private void PlayStretch(Transform target, Vector3 initialScale, TweenCallback onPeak = null)
+    private float GetWaveScaleMultiplier(int waveDepth)
     {
-        var stretchedScale = initialScale * scaleMultiplier;
+        var centerExtraScale = scaleMultiplier - 1f;
+        var waveExtraScale = centerExtraScale * Mathf.Pow(waveStrengthFalloffPerStep, waveDepth);
+        return 1f + waveExtraScale;
+    }
+
+    private void PlayStretch(
+        Transform target,
+        Vector3 initialScale,
+        float targetScaleMultiplier,
+        TweenCallback onPeak = null)
+    {
+        var stretchedScale = initialScale * targetScaleMultiplier;
 
         var sequence = DOTween.Sequence()
             .Append(target.DOScale(stretchedScale, stretchDuration).SetEase(Ease.OutQuad));

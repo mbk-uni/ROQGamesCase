@@ -1834,6 +1834,9 @@ MonoBehaviour:
   - id: MiniConfetti
     prefab: {fileID: 3629936875153163302, guid: f22bd25c02a534c539d3ff373beef1a2, type: 3}
     initialSize: 100
+  - id: ImpactBurst
+    prefab: {fileID: 2197180272132347860, guid: 939a319e52d534493916bd04742d87d1, type: 3}
+    initialSize: 100
 --- !u!4 &481692664
 Transform:
   m_ObjectHideFlags: 0
@@ -2757,9 +2760,10 @@ MonoBehaviour:
   arrivalVfxPoolId: MiniConfetti
   arrivalSfxId: fittheshape_wave
   arrivalSfxVolume: 1
-  scaleMultiplier: 1.1
+  scaleMultiplier: 1.18
   stretchDuration: 0.1
   returnDuration: 0.14
+  waveStrengthFalloffPerStep: 0.65
 --- !u!1001 &622931402
 PrefabInstance:
   m_ObjectHideFlags: 0
@@ -4304,9 +4308,10 @@ MonoBehaviour:
   arrivalVfxPoolId: MiniConfetti
   arrivalSfxId: fittheshape_wave
   arrivalSfxVolume: 1
-  scaleMultiplier: 1.1
+  scaleMultiplier: 1.18
   stretchDuration: 0.1
   returnDuration: 0.14
+  waveStrengthFalloffPerStep: 0.65
 --- !u!1001 &1106214314
 PrefabInstance:
   m_ObjectHideFlags: 0
@@ -8334,9 +8339,10 @@ MonoBehaviour:
   arrivalVfxPoolId: MiniConfetti
   arrivalSfxId: fittheshape_wave
   arrivalSfxVolume: 1
-  scaleMultiplier: 1.1
+  scaleMultiplier: 1.18
   stretchDuration: 0.1
   returnDuration: 0.14
+  waveStrengthFalloffPerStep: 0.65
 --- !u!1001 &1893699800
 PrefabInstance:
   m_ObjectHideFlags: 0
