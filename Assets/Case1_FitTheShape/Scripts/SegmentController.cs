@@ -28,6 +28,12 @@ public sealed class SegmentController : MonoBehaviour
     [SerializeField] private string arrivalVfxPoolId = "MiniConfetti";
     [Tooltip("Ana VFX ile aynı anda ve aynı VFX Anchor konumunda oynatılacak impact havuzu.")]
     [SerializeField] private string impactVfxPoolId = "ImpactBurst";
+    [Tooltip("Diğer varış VFX'leriyle aynı anda ve aynı VFX Anchor konumunda oynatılacak merkez efekti havuzu.")]
+    [SerializeField] private string centerSphereVfxPoolId = "CenterSphere";
+    [Tooltip("CenterSphere için VFX Anchor rotasyonuna uygulanacak local Euler offset.")]
+    [SerializeField] private Vector3 centerSphereRotationOffset = new Vector3(90f, 0f, 0f);
+    [Tooltip("CenterSphere oynadıktan sonra MiniConfetti ve ImpactBurst'ün başlayacağı gecikme.")]
+    [SerializeField, Min(0f)] private float secondaryVfxDelay = 0.03f;
 
     [Header("Arrival Audio")]
     [SerializeField] private string arrivalSfxId = "fittheshape_wave";
@@ -46,6 +52,7 @@ public sealed class SegmentController : MonoBehaviour
 
     private Vector3 mainInitialScale;
     private Tween stretchTween;
+    private Tween secondaryVfxDelayTween;
     private readonly HashSet<Transform> waveVisitedSegments = new();
 
     private static readonly Vector2Int[] AdjacentOffsets =
@@ -70,7 +77,9 @@ public sealed class SegmentController : MonoBehaviour
     private void OnDisable()
     {
         stretchTween?.Kill();
+        secondaryVfxDelayTween?.Kill();
         stretchTween = null;
+        secondaryVfxDelayTween = null;
         waveVisitedSegments.Clear();
     }
 
@@ -104,8 +113,27 @@ public sealed class SegmentController : MonoBehaviour
         if (PoolManager.Instance == null || spawnAnchor == null)
             return;
 
-        PlayPooledVfx(arrivalVfxPoolId, spawnAnchor);
-        PlayPooledVfx(impactVfxPoolId, spawnAnchor);
+        var spawnPosition = spawnAnchor.position;
+        var spawnRotation = spawnAnchor.rotation;
+
+        PlayPooledVfx(
+            centerSphereVfxPoolId,
+            spawnPosition,
+            spawnRotation * Quaternion.Euler(centerSphereRotationOffset));
+
+        secondaryVfxDelayTween?.Kill();
+        secondaryVfxDelayTween = DOVirtual.DelayedCall(
+            secondaryVfxDelay,
+            () => PlaySecondaryArrivalVfx(spawnPosition, spawnRotation));
+    }
+
+    private void PlaySecondaryArrivalVfx(Vector3 position, Quaternion rotation)
+    {
+        if (PoolManager.Instance == null)
+            return;
+
+        PlayPooledVfx(arrivalVfxPoolId, position, rotation);
+        PlayPooledVfx(impactVfxPoolId, position, rotation);
     }
 
     private static void PlayPooledVfx(string poolId, Transform spawnAnchor)
@@ -114,6 +142,14 @@ public sealed class SegmentController : MonoBehaviour
             return;
 
         PoolManager.Instance.PlayVfx(poolId, spawnAnchor.position, spawnAnchor.rotation);
+    }
+
+    private static void PlayPooledVfx(string poolId, Vector3 position, Quaternion rotation)
+    {
+        if (string.IsNullOrWhiteSpace(poolId))
+            return;
+
+        PoolManager.Instance.PlayVfx(poolId, position, rotation);
     }
 
     private void PlayArrivalSfx()
