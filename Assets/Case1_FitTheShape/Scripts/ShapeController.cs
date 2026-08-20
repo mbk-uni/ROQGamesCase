@@ -44,6 +44,10 @@ public sealed class ShapeController : MonoBehaviour
     [Tooltip("Uçuş sırasındaki local Y ekseni dönüş hızı (derece/saniye). Negatif değer ters yöne döner.")]
     [SerializeField] private float localYRotationSpeed = 360f;
 
+    [Header("Flight Visibility")]
+    [Tooltip("Uçuş başladığında şeklin doğrudan child objelerini gizler. Gölge/alt katman için kullanılır.")]
+    [SerializeField] private bool hideDirectChildrenOnFlight = true;
+
     [Header("Events")]
     [SerializeField] private UnityEvent onArrived;
 
@@ -53,6 +57,8 @@ public sealed class ShapeController : MonoBehaviour
     private Quaternion initialLocalRotation;
     private Vector3 initialScale;
     private bool isFlying;
+    private GameObject[] directChildObjects;
+    private bool[] childInitialActiveStates;
 
     public ShapeType ShapeType => shapeType;
     public SegmentController TargetSegment => targetSegment;
@@ -87,6 +93,7 @@ public sealed class ShapeController : MonoBehaviour
         initialLocalPosition = transform.localPosition;
         initialLocalRotation = transform.localRotation;
         initialScale = transform.localScale;
+        CacheDirectChildren();
         EnsureClickCollider();
     }
 
@@ -96,6 +103,7 @@ public sealed class ShapeController : MonoBehaviour
         transform.localPosition = initialLocalPosition;
         transform.localRotation = initialLocalRotation;
         transform.localScale = initialScale;
+        RestoreDirectChildren();
 
         if (clickCollider != null)
             clickCollider.enabled = true;
@@ -150,6 +158,7 @@ public sealed class ShapeController : MonoBehaviour
 
         isFlying = true;
         clickCollider.enabled = false;
+        HideDirectChildren();
 
         var startPosition = transform.position;
         var endPosition = target.position;
@@ -227,6 +236,37 @@ public sealed class ShapeController : MonoBehaviour
     private Transform GetTargetAnchor()
     {
         return targetSegment != null ? targetSegment.HoleTransform : targetAnchor;
+    }
+
+    private void CacheDirectChildren()
+    {
+        directChildObjects = new GameObject[transform.childCount];
+        childInitialActiveStates = new bool[transform.childCount];
+
+        for (var index = 0; index < transform.childCount; index++)
+        {
+            var childObject = transform.GetChild(index).gameObject;
+            directChildObjects[index] = childObject;
+            childInitialActiveStates[index] = childObject.activeSelf;
+        }
+    }
+
+    private void HideDirectChildren()
+    {
+        if (!hideDirectChildrenOnFlight || directChildObjects == null)
+            return;
+
+        foreach (var childObject in directChildObjects)
+            childObject.SetActive(false);
+    }
+
+    private void RestoreDirectChildren()
+    {
+        if (directChildObjects == null || childInitialActiveStates == null)
+            return;
+
+        for (var index = 0; index < directChildObjects.Length; index++)
+            directChildObjects[index].SetActive(childInitialActiveStates[index]);
     }
 
     private SegmentController GetTargetSegment()
