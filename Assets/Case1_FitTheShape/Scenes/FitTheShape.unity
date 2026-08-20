@@ -1885,6 +1885,11 @@ Transform:
   m_CorrespondingSourceObject: {fileID: 6371146750105926131, guid: 5c44bc22f023b4a36b87e16c656406d4, type: 3}
   m_PrefabInstance: {fileID: 521548352}
   m_PrefabAsset: {fileID: 0}
+--- !u!4 &529020766 stripped
+Transform:
+  m_CorrespondingSourceObject: {fileID: 4845290115676623272, guid: 5c44bc22f023b4a36b87e16c656406d4, type: 3}
+  m_PrefabInstance: {fileID: 1875235813}
+  m_PrefabAsset: {fileID: 0}
 --- !u!1001 &529274040
 PrefabInstance:
   m_ObjectHideFlags: 0
@@ -2694,6 +2699,8 @@ MonoBehaviour:
   targetShape: 2
   mainTransform: {fileID: 542028624}
   holeTransform: {fileID: 542028625}
+  vfxAnchor: {fileID: 0}
+  arrivalVfxPoolId: MiniConfetti
   horizontalStretchMultiplier: 1.18
   stretchDuration: 0.1
   returnDuration: 0.14
@@ -4236,6 +4243,8 @@ MonoBehaviour:
   targetShape: 1
   mainTransform: {fileID: 998315222}
   holeTransform: {fileID: 998315223}
+  vfxAnchor: {fileID: 0}
+  arrivalVfxPoolId: MiniConfetti
   horizontalStretchMultiplier: 1.18
   stretchDuration: 0.1
   returnDuration: 0.14
@@ -8188,6 +8197,8 @@ MonoBehaviour:
   targetShape: 0
   mainTransform: {fileID: 1875235814}
   holeTransform: {fileID: 1875235815}
+  vfxAnchor: {fileID: 529020766}
+  arrivalVfxPoolId: MiniConfetti
   horizontalStretchMultiplier: 1.18
   stretchDuration: 0.1
   returnDuration: 0.14
