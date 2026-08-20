@@ -2757,14 +2757,9 @@ MonoBehaviour:
   arrivalVfxPoolId: MiniConfetti
   arrivalSfxId: fittheshape_wave
   arrivalSfxVolume: 1
-  horizontalStretchMultiplier: 1.18
+  scaleMultiplier: 1.1
   stretchDuration: 0.1
   returnDuration: 0.14
-  stretchAdjacentSegments: 1
-  dominoReach: 4
-  playDiagonalRipple: 1
-  diagonalRippleDelay: 0.25
-  diagonalRippleReach: 4
 --- !u!1001 &622931402
 PrefabInstance:
   m_ObjectHideFlags: 0
@@ -4309,14 +4304,9 @@ MonoBehaviour:
   arrivalVfxPoolId: MiniConfetti
   arrivalSfxId: fittheshape_wave
   arrivalSfxVolume: 1
-  horizontalStretchMultiplier: 1.18
+  scaleMultiplier: 1.1
   stretchDuration: 0.1
   returnDuration: 0.14
-  stretchAdjacentSegments: 1
-  dominoReach: 4
-  playDiagonalRipple: 1
-  diagonalRippleDelay: 0.25
-  diagonalRippleReach: 4
 --- !u!1001 &1106214314
 PrefabInstance:
   m_ObjectHideFlags: 0
@@ -8344,14 +8334,9 @@ MonoBehaviour:
   arrivalVfxPoolId: MiniConfetti
   arrivalSfxId: fittheshape_wave
   arrivalSfxVolume: 1
-  horizontalStretchMultiplier: 1.18
+  scaleMultiplier: 1.1
   stretchDuration: 0.1
   returnDuration: 0.14
-  stretchAdjacentSegments: 1
-  dominoReach: 4
-  playDiagonalRipple: 1
-  diagonalRippleDelay: 0.25
-  diagonalRippleReach: 4
 --- !u!1001 &1893699800
 PrefabInstance:
   m_ObjectHideFlags: 0

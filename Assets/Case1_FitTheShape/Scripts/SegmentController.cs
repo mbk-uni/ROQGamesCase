@@ -1,5 +1,7 @@
 using DG.Tweening;
+using System.Collections.Generic;
 using UnityEngine;
+using UnityEngine.Serialization;
 
 public enum ShapeType
 {
@@ -30,26 +32,15 @@ public sealed class SegmentController : MonoBehaviour
     [SerializeField, Range(0f, 1f)] private float arrivalSfxVolume = 1f;
 
     [Header("Arrival Feedback")]
-    [Tooltip("Main Transform'un local X eksenindeki en büyük ölçek çarpanı.")]
-    [SerializeField, Min(1f)] private float horizontalStretchMultiplier = 1.18f;
+    [Tooltip("Segmentin tüm eksenlerde ulaşacağı en büyük ölçek çarpanı.")]
+    [FormerlySerializedAs("horizontalStretchMultiplier")]
+    [SerializeField, Min(1f)] private float scaleMultiplier = 1.18f;
     [SerializeField, Min(0.01f)] private float stretchDuration = 0.1f;
     [SerializeField, Min(0.01f)] private float returnDuration = 0.14f;
 
-    [Header("Neighbour Feedback")]
-    [Tooltip("Ana segment en geniş haline ulaştığında dört yönde domino stretch dalgası başlatır.")]
-    [SerializeField] private bool stretchAdjacentSegments = true;
-    [Tooltip("Her yönde merkezden itibaren kaç segmentin tetikleneceği.")]
-    [SerializeField, Min(1)] private int dominoReach = 4;
-
-    [Header("Diagonal Ripple")]
-    [Tooltip("Önceki domino efektinden bağımsız çapraz dalga efektini etkinleştirir.")]
-    [SerializeField] private bool playDiagonalRipple = true;
-    [SerializeField, Min(0f)] private float diagonalRippleDelay = 0.25f;
-    [SerializeField, Min(1)] private int diagonalRippleReach = 4;
-
     private Vector3 mainInitialScale;
     private Tween stretchTween;
-    private Tween diagonalRippleDelayTween;
+    private readonly HashSet<Transform> waveVisitedSegments = new();
 
     private static readonly Vector2Int[] AdjacentOffsets =
     {
@@ -57,14 +48,6 @@ public sealed class SegmentController : MonoBehaviour
         new Vector2Int(1, 0),
         new Vector2Int(0, -1),
         new Vector2Int(0, 1)
-    };
-
-    private static readonly Vector2Int[] DiagonalOffsets =
-    {
-        new Vector2Int(-1, -1),
-        new Vector2Int(-1, 1),
-        new Vector2Int(1, -1),
-        new Vector2Int(1, 1)
     };
 
     public ShapeType TargetShape => targetShape;
@@ -82,8 +65,7 @@ public sealed class SegmentController : MonoBehaviour
     {
         stretchTween?.Kill();
         stretchTween = null;
-        diagonalRippleDelayTween?.Kill();
-        diagonalRippleDelayTween = null;
+        waveVisitedSegments.Clear();
     }
 
     /// <summary>
@@ -99,17 +81,15 @@ public sealed class SegmentController : MonoBehaviour
 
         PlayArrivalVfx();
         PlayArrivalSfx();
-        StartDiagonalRipple();
         stretchTween?.Kill();
         mainTransform.localScale = mainInitialScale;
 
-        var stretchedScale = mainInitialScale;
-        stretchedScale.x *= horizontalStretchMultiplier;
+        var stretchedScale = mainInitialScale * scaleMultiplier;
 
         stretchTween = DOTween.Sequence()
-            .Append(mainTransform.DOScaleX(stretchedScale.x, stretchDuration).SetEase(Ease.OutQuad))
-            .AppendCallback(PlayDominoWave)
-            .Append(mainTransform.DOScaleX(mainInitialScale.x, returnDuration).SetEase(Ease.InQuad));
+            .Append(mainTransform.DOScale(stretchedScale, stretchDuration).SetEase(Ease.OutQuad))
+            .AppendCallback(StartWave)
+            .Append(mainTransform.DOScale(mainInitialScale, returnDuration).SetEase(Ease.InQuad));
     }
 
     private void PlayArrivalVfx()
@@ -130,84 +110,50 @@ public sealed class SegmentController : MonoBehaviour
         AudioManager.Instance.PlaySfx(arrivalSfxId, arrivalSfxVolume);
     }
 
-    private void PlayDominoWave()
-    {
-        if (!stretchAdjacentSegments || !TryGetGridCoordinates(out var column, out var row))
-            return;
-
-        foreach (var direction in AdjacentOffsets)
-            PlayDominoStep(column, row, direction, 1);
-    }
-
-    private void StartDiagonalRipple()
-    {
-        if (!playDiagonalRipple)
-            return;
-
-        diagonalRippleDelayTween?.Kill();
-        diagonalRippleDelayTween = DOVirtual.DelayedCall(diagonalRippleDelay, PlayDiagonalRippleWave);
-    }
-
-    private void PlayDiagonalRippleWave()
+    private void StartWave()
     {
         if (!TryGetGridCoordinates(out var column, out var row))
             return;
 
-        foreach (var direction in DiagonalOffsets)
-            PlayDiagonalRippleStep(column, row, direction, 1);
+        waveVisitedSegments.Clear();
+        waveVisitedSegments.Add(mainTransform);
+        PropagateWaveFrom(column, row);
     }
 
-    private void PlayDiagonalRippleStep(int originColumn, int originRow, Vector2Int direction, int distance)
+    private void PropagateWaveFrom(int originColumn, int originRow)
     {
-        if (distance > diagonalRippleReach)
-            return;
+        foreach (var direction in AdjacentOffsets)
+        {
+            var column = originColumn + direction.x;
+            var row = direction.y == 0 ? originRow : WrapRow(originRow + direction.y);
+            var neighbour = FindSegmentTransform(column, row);
+            if (neighbour == null || !waveVisitedSegments.Add(neighbour))
+                continue;
 
-        var column = originColumn + direction.x * distance;
-        var row = WrapRow(originRow + direction.y * distance);
-        var segment = FindSegmentTransform(column, row);
-        if (segment == null)
-            return;
-
-        PlayStretch(
-            segment,
-            segment.localScale,
-            () => PlayDiagonalRippleStep(originColumn, originRow, direction, distance + 1));
-    }
-
-    private void PlayDominoStep(int originColumn, int originRow, Vector2Int direction, int distance)
-    {
-        if (distance > dominoReach)
-            return;
-
-        var column = originColumn + direction.x * distance;
-        var row = direction.y == 0
-            ? originRow
-            : WrapRow(originRow + direction.y * distance);
-        var segment = FindSegmentTransform(column, row);
-        if (segment == null)
-            return;
-
-        PlayStretch(
-            segment,
-            segment.localScale,
-            () => PlayDominoStep(originColumn, originRow, direction, distance + 1));
+            PlayStretch(neighbour, neighbour.localScale, () => PropagateWaveFrom(column, row));
+        }
     }
 
     private void PlayStretch(Transform target, Vector3 initialScale, TweenCallback onPeak = null)
     {
-        var stretchedScale = initialScale;
-        stretchedScale.x *= horizontalStretchMultiplier;
+        var stretchedScale = initialScale * scaleMultiplier;
 
         var sequence = DOTween.Sequence()
-            .Append(target.DOScaleX(stretchedScale.x, stretchDuration).SetEase(Ease.OutQuad));
+            .Append(target.DOScale(stretchedScale, stretchDuration).SetEase(Ease.OutQuad));
 
         if (onPeak != null)
             sequence.AppendCallback(onPeak);
 
-        sequence.Append(target.DOScaleX(initialScale.x, returnDuration).SetEase(Ease.InQuad));
+        sequence.Append(target.DOScale(initialScale, returnDuration).SetEase(Ease.InQuad));
     }
 
     private bool TryGetGridCoordinates(out int column, out int row)
+    {
+        var segmentName = mainTransform != null ? mainTransform.name : gameObject.name;
+        return TryParseGridCoordinates(segmentName, out column, out row);
+    }
+
+    private static bool TryParseGridCoordinates(string segmentName, out int column, out int row)
     {
         const string ColumnPrefix = "Segment_c";
         const string RowPrefix = "_r";
@@ -215,7 +161,6 @@ public sealed class SegmentController : MonoBehaviour
         column = 0;
         row = 0;
 
-        var segmentName = mainTransform != null ? mainTransform.name : gameObject.name;
         if (!segmentName.StartsWith(ColumnPrefix))
             return false;
 
@@ -231,7 +176,7 @@ public sealed class SegmentController : MonoBehaviour
 
     private Transform FindSegmentTransform(int column, int row)
     {
-        var segmentContainer = mainTransform != null ? mainTransform.parent : transform.parent;
+        var segmentContainer = GetSegmentContainer();
         if (segmentContainer == null)
             return null;
 
@@ -243,6 +188,11 @@ public sealed class SegmentController : MonoBehaviour
         }
 
         return null;
+    }
+
+    private Transform GetSegmentContainer()
+    {
+        return mainTransform != null ? mainTransform.parent : transform.parent;
     }
 
     private static int WrapRow(int row)
