@@ -7,12 +7,63 @@ public sealed class BlockFragmentFadeOut : MonoBehaviour
     private Renderer[] fragmentRenderers;
     private Material[][] instanceMaterials;
     private Color[][] originalColors;
+    private bool waitingForFloorContact;
+    private float floorFadeDelay;
+    private float fadeDuration;
+    private float despawnBelowY = float.NegativeInfinity;
 
     public void Play(float delay, float duration)
     {
         StopAllCoroutines();
+        waitingForFloorContact = false;
+        despawnBelowY = float.NegativeInfinity;
         CacheMaterials();
         StartCoroutine(FadeAndDisable(delay, duration));
+    }
+
+    /// <summary>
+    /// Uses a short fade timer for fragments that fall through a hole, while a
+    /// fragment that lands on a Floor tile receives the longer floor timer.
+    /// </summary>
+    public void PlayByFloorState(
+        float fallingDelay,
+        float newFloorFadeDelay,
+        float newFadeDuration,
+        float newDespawnBelowY)
+    {
+        StopAllCoroutines();
+        CacheMaterials();
+        waitingForFloorContact = true;
+        floorFadeDelay = Mathf.Max(0f, newFloorFadeDelay);
+        fadeDuration = Mathf.Max(0.01f, newFadeDuration);
+        despawnBelowY = newDespawnBelowY;
+        StartCoroutine(FadeIfNoFloorContact(Mathf.Max(0f, fallingDelay)));
+    }
+
+    private void Update()
+    {
+        if (transform.position.y <= despawnBelowY)
+            gameObject.SetActive(false);
+    }
+
+    private void OnCollisionEnter(Collision collision)
+    {
+        if (!waitingForFloorContact || collision.collider.GetComponentInParent<FloorPhysicsSurface>() == null)
+            return;
+
+        waitingForFloorContact = false;
+        StopAllCoroutines();
+        StartCoroutine(FadeAndDisable(floorFadeDelay, fadeDuration));
+    }
+
+    private IEnumerator FadeIfNoFloorContact(float fallingDelay)
+    {
+        yield return new WaitForSeconds(fallingDelay);
+        if (!waitingForFloorContact)
+            yield break;
+
+        waitingForFloorContact = false;
+        StartCoroutine(FadeAndDisable(0f, fadeDuration));
     }
 
     private void CacheMaterials()

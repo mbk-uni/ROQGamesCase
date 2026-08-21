@@ -82,7 +82,12 @@ public sealed class PoolManager : MonoBehaviour
     /// Spawns a pooled ParticleSystem, restarts it, and automatically returns it once all particles are gone.
     /// The particle's Loop setting must be disabled for automatic return to happen.
     /// </summary>
-    public GameObject PlayVfx(string poolId, Vector3 position, Quaternion rotation, Transform parent = null)
+    public GameObject PlayVfx(
+        string poolId,
+        Vector3 position,
+        Quaternion rotation,
+        Transform parent = null,
+        Color? startColor = null)
     {
         var instance = Spawn(poolId, position, rotation, parent);
         if (instance == null)
@@ -92,6 +97,13 @@ public sealed class PoolManager : MonoBehaviour
         foreach (var particleSystem in particleSystems)
         {
             particleSystem.Stop(true, ParticleSystemStopBehavior.StopEmittingAndClear);
+
+            if (startColor.HasValue)
+            {
+                var main = particleSystem.main;
+                main.startColor = startColor.Value;
+            }
+
             particleSystem.Play(true);
         }
 

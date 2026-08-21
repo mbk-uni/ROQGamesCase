@@ -24,12 +24,52 @@ public sealed class HoleController : MonoBehaviour
     [SerializeField, Min(0f)] private float fadeDelay = 1f;
     [SerializeField, Min(0.01f)] private float fadeDuration = 0.35f;
 
+    [Header("Break VFX")]
+    [Tooltip("Boş bırakılırsa Hole altındaki VfxAnchor aranır; o da yoksa Snap Anchor kullanılır.")]
+    [SerializeField] private Transform vfxAnchor;
+    [Tooltip("Boş bırakılırsa Hole objesindeki Renderer kullanılır.")]
+    [SerializeField] private Renderer vfxColorRenderer;
+
     public bool IsOccupied { get; private set; }
     public Transform SnapAnchor => snapAnchor != null ? snapAnchor : transform;
     public Vector3 SnapPosition => SnapAnchor.position;
     public Quaternion SnapRotation => SnapAnchor.rotation;
+    public Transform VfxAnchor => vfxAnchor != null ? vfxAnchor : FindVfxAnchor();
     public float FragmentContainmentRadius => fragmentScatterRadius;
     public IReadOnlyList<MissingFloorTile> MissingTiles => missingTiles;
+
+    /// <summary>
+    /// Gets the visible Hole material colour for a break VFX. URP materials use
+    /// _BaseColor while legacy/standard materials commonly use _Color.
+    /// </summary>
+    public bool TryGetVfxColor(out Color color)
+    {
+        var renderer = vfxColorRenderer != null ? vfxColorRenderer : GetComponent<Renderer>();
+        if (renderer == null)
+            renderer = GetComponentInChildren<Renderer>(true);
+
+        if (renderer != null)
+        {
+            var material = renderer.sharedMaterial;
+            if (material != null)
+            {
+                if (material.HasProperty("_BaseColor"))
+                {
+                    color = material.GetColor("_BaseColor");
+                    return true;
+                }
+
+                if (material.HasProperty("_Color"))
+                {
+                    color = material.GetColor("_Color");
+                    return true;
+                }
+            }
+        }
+
+        color = Color.white;
+        return false;
+    }
 
     public bool CanAccept(BlockController block)
     {
@@ -55,6 +95,17 @@ public sealed class HoleController : MonoBehaviour
 
             fadeOut.Play(fadeDelay, fadeDuration);
         }
+    }
+
+    private Transform FindVfxAnchor()
+    {
+        foreach (var child in GetComponentsInChildren<Transform>(true))
+        {
+            if (child.name == "VfxAnchor")
+                return child;
+        }
+
+        return SnapAnchor;
     }
 
 }

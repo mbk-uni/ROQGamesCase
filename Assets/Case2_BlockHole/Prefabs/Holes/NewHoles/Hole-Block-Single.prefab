@@ -11,6 +11,7 @@ GameObject:
   - component: {fileID: 169413761854119638}
   - component: {fileID: 4185908550441804038}
   - component: {fileID: 6830066446457693727}
+  - component: {fileID: 3227075437732177999}
   m_Layer: 0
   m_Name: Hole-Block-Single
   m_TagString: Untagged
@@ -68,7 +69,7 @@ MeshRenderer:
   m_RenderingLayerMask: 1
   m_RendererPriority: 0
   m_Materials:
-  - {fileID: 2100000, guid: 387357214d46246d88bd242848c5bda8, type: 2}
+  - {fileID: 2100000, guid: 95d88c768025747f7ae656aee8be6111, type: 2}
   m_StaticBatchInfo:
     firstSubMesh: 0
     subMeshCount: 0
@@ -92,6 +93,27 @@ MeshRenderer:
   m_SortingOrder: 0
   m_MaskInteraction: 0
   m_AdditionalVertexStreams: {fileID: 0}
+--- !u!114 &3227075437732177999
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1298144089075564405}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: aea7e744986274d15aecabaef8484d01, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::HoleController
+  blockTypeVariant: 0
+  snapAnchor: {fileID: 0}
+  snapRadius: 0.65
+  fragmentScatterRadius: 1
+  missingTiles:
+  - column: 1
+    row: 6
+  fadeDelay: 1
+  fadeDuration: 0.35
 --- !u!1 &1368180121406543735
 GameObject:
   m_ObjectHideFlags: 0

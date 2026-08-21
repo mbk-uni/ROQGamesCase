@@ -18,9 +18,17 @@ public sealed class BlockController : MonoBehaviour
     [SerializeField, Min(0f)] private float fragmentGravityDelay = 0.3f;
     [Tooltip("Normal yerçekiminin kullanılacak oranı. Düşüşü daha yavaş ve okunur yapar.")]
     [SerializeField, Range(0.01f, 5f)] private float fragmentGravityScale = 0.28f;
-    [Tooltip("Kırılma anından fade-out başlangıcına kadar geçen süre.")]
+    [Tooltip("Floor üzerinde kalan parçanın fade-out başlangıcına kadar bekleyeceği süre.")]
     [SerializeField, Min(0f)] private float fragmentFadeDelay = 1f;
+    [Tooltip("Floor'a temas etmeyip hole'dan düşen parçanın fade-out başlangıcına kadar bekleyeceği süre.")]
+    [SerializeField, Min(0f)] private float fragmentFallingFadeDelay = 0.25f;
     [SerializeField, Min(0.01f)] private float fragmentFadeDuration = 0.35f;
+    [Tooltip("Parça bu dünya Y değerine ulaştığında fade-out beklemeden doğrudan kapanır.")]
+    [SerializeField] private float fragmentDespawnBelowY = -10f;
+
+    [Header("Break VFX")]
+    [Tooltip("Kırılma başladıktan sonra DebrisBurst'ün oynatılacağı gecikme.")]
+    [SerializeField, Min(0f)] private float debrisBurstDelay;
 
     private readonly List<MeshRenderer> solidRenderers = new();
     private readonly List<Collider> solidColliders = new();
@@ -65,9 +73,82 @@ public sealed class BlockController : MonoBehaviour
         foreach (var root in activeFracturedRoots)
             root.gameObject.SetActive(true);
 
+        PlayDustPuffs();
+        PlayBreakVfx(hole);
         StartCoroutine(ReleaseFragments(hole));
         FloorTileRebuilder.RestoreFor(hole);
         return true;
+    }
+
+    private void PlayBreakVfx(HoleController hole)
+    {
+        if (debrisBurstDelay <= 0f)
+        {
+            PlayDebrisBurst(hole);
+            return;
+        }
+
+        StartCoroutine(PlayDebrisBurstAfterDelay(hole));
+    }
+
+    private IEnumerator PlayDebrisBurstAfterDelay(HoleController hole)
+    {
+        yield return new WaitForSeconds(debrisBurstDelay);
+        PlayDebrisBurst(hole);
+    }
+
+    private static void PlayDebrisBurst(HoleController hole)
+    {
+        if (PoolManager.Instance == null || hole == null)
+            return;
+
+        var anchor = hole.VfxAnchor;
+        if (anchor == null)
+            return;
+
+        var startColor = hole.TryGetVfxColor(out var holeColor) ? holeColor : Color.white;
+        PoolManager.Instance.PlayVfx("DebrisBurst", anchor.position, anchor.rotation, null, startColor);
+    }
+
+    private void PlayDustPuffs()
+    {
+        if (PoolManager.Instance == null)
+            return;
+
+        var startColor = TryGetBlockVfxColor(out var blockColor) ? blockColor : Color.white;
+        foreach (var fracturedRoot in activeFracturedRoots)
+        {
+            if (fracturedRoot == null)
+                continue;
+
+            var dustPosition = fracturedRoot.position + Vector3.up;
+            PoolManager.Instance.PlayVfx("DustPuff", dustPosition, fracturedRoot.rotation, null, startColor);
+        }
+    }
+
+    private bool TryGetBlockVfxColor(out Color color)
+    {
+        foreach (var renderer in solidRenderers)
+        {
+            if (renderer == null || renderer.sharedMaterial == null)
+                continue;
+
+            var material = renderer.sharedMaterial;
+            if (material.HasProperty("_BaseColor"))
+            {
+                color = material.GetColor("_BaseColor");
+                return true;
+            }
+
+            if (material.HasProperty("_Color"))
+            {
+                color = material.GetColor("_Color");
+                return true;
+            }
+        }
+
+        color = Color.white;
+        return false;
     }
 
     private void CacheReferences()
@@ -182,7 +263,11 @@ public sealed class BlockController : MonoBehaviour
                 if (fadeOut == null)
                     fadeOut = piece.gameObject.AddComponent<BlockFragmentFadeOut>();
 
-                fadeOut.Play(fragmentFadeDelay, fragmentFadeDuration);
+                fadeOut.PlayByFloorState(
+                    fragmentFallingFadeDelay,
+                    fragmentFadeDelay,
+                    fragmentFadeDuration,
+                    fragmentDespawnBelowY);
                 fragments.Add(rigidbody);
             }
         }

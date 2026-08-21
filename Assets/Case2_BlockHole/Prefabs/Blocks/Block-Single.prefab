@@ -159,7 +159,10 @@ MonoBehaviour:
   fragmentGravityDelay: 0.2
   fragmentGravityScale: 5
   fragmentFadeDelay: 1
+  fragmentFallingFadeDelay: 0.25
   fragmentFadeDuration: 0.35
+  fragmentDespawnBelowY: -20
+  debrisBurstDelay: 0
 --- !u!1 &8486633890369094708
 GameObject:
   m_ObjectHideFlags: 0

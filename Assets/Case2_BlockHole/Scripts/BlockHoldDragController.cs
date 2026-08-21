@@ -164,16 +164,16 @@ public sealed class BlockHoldDragController : MonoBehaviour
 
     private void EndHold()
     {
-        if (AudioManager.Instance != null)
-            AudioManager.Instance.PlaySfx(holdReleaseSfxId, holdReleaseSfxVolume);
-
         SetOutlineEnabled(heldBlock, false);
 
         if (snappedHole != null && heldBlockController != null)
         {
             var snapPosition = GetSnapPosition(snappedHole);
             heldBlock.SetPositionAndRotation(snapPosition, snappedHole.SnapRotation);
-            heldBlockController.ConsumeAt(snappedHole, snapPosition);
+            var didConsume = heldBlockController.ConsumeAt(snappedHole, snapPosition);
+            if (didConsume && AudioManager.Instance != null)
+                AudioManager.Instance.PlaySfx(holdReleaseSfxId, holdReleaseSfxVolume);
+
             ClearHeldBlock();
             return;
         }
