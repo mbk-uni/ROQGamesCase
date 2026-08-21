@@ -1,0 +1,173 @@
+using System.Collections;
+using System.Collections.Generic;
+using UnityEngine;
+
+[DisallowMultipleComponent]
+public sealed class FloorTileRebuilder : MonoBehaviour
+{
+    [Header("Tile Prefabs")]
+    [SerializeField] private GameObject lightFloorPrefab;
+    [SerializeField] private GameObject darkFloorPrefab;
+    [SerializeField] private Transform tilesParent;
+
+    [Header("Restore Animation")]
+    [SerializeField, Min(0f)] private float restoreDelay = 1f;
+    [SerializeField, Min(0f)] private float randomStagger = 0.2f;
+    [SerializeField] private Vector2 spawnBelowRange = new(0.35f, 0.65f);
+    [SerializeField] private Vector2 riseAboveRange = new(0.12f, 0.28f);
+    [SerializeField] private Vector2 riseDurationRange = new(0.2f, 0.35f);
+    [SerializeField] private Vector2 settleDurationRange = new(0.25f, 0.45f);
+
+    private readonly Dictionary<Vector2Int, Transform> existingTiles = new();
+    private readonly HashSet<Vector2Int> restoredTiles = new();
+    private bool gridCached;
+    private Vector3 originLocalPosition;
+    private Vector3 xStepLocal;
+    private Vector3 zStepLocal;
+    private Vector3 tileLocalScale;
+    private Quaternion tileLocalRotation;
+
+    public static void RestoreFor(HoleController hole)
+    {
+        if (hole == null || hole.MissingTiles.Count == 0)
+            return;
+
+        var rebuilder = FindFirstObjectByType<FloorTileRebuilder>();
+        if (rebuilder == null)
+        {
+            Debug.LogWarning("FloorTileRebuilder sahnede bulunamadı.", hole);
+            return;
+        }
+
+        rebuilder.RestoreTilesFor(hole);
+    }
+
+    private void Awake()
+    {
+        CacheGrid();
+    }
+
+    private void RestoreTilesFor(HoleController hole)
+    {
+        CacheGrid();
+        if (!gridCached)
+            return;
+
+        foreach (var tile in hole.MissingTiles)
+        {
+            var coordinate = new Vector2Int(tile.column, tile.row);
+            if (existingTiles.ContainsKey(coordinate) || !restoredTiles.Add(coordinate))
+                continue;
+
+            StartCoroutine(RestoreTileRoutine(coordinate));
+        }
+    }
+
+    private IEnumerator RestoreTileRoutine(Vector2Int coordinate)
+    {
+        yield return new WaitForSeconds(restoreDelay + Random.Range(0f, randomStagger));
+
+        var prefab = IsLightTile(coordinate) ? lightFloorPrefab : darkFloorPrefab;
+        if (prefab == null)
+        {
+            Debug.LogWarning($"Tile_{coordinate.x}_{coordinate.y} için gerekli Floor prefabı atanmadı.", this);
+            yield break;
+        }
+
+        var targetLocalPosition = originLocalPosition + xStepLocal * coordinate.x + zStepLocal * coordinate.y;
+        var tile = Instantiate(prefab, tilesParent != null ? tilesParent : transform).transform;
+        tile.name = $"Tile_{coordinate.x}_{coordinate.y}";
+        tile.localRotation = tileLocalRotation;
+        tile.localScale = tileLocalScale;
+
+        var spawnPosition = targetLocalPosition - Vector3.up * Random.Range(spawnBelowRange.x, spawnBelowRange.y);
+        var peakPosition = targetLocalPosition + Vector3.up * Random.Range(riseAboveRange.x, riseAboveRange.y);
+        tile.localPosition = spawnPosition;
+
+        var tileCollider = tile.GetComponent<Collider>();
+        if (tileCollider == null)
+            tileCollider = tile.gameObject.AddComponent<BoxCollider>();
+
+        tileCollider.enabled = false;
+        yield return MoveLocalPosition(tile, spawnPosition, peakPosition, Random.Range(riseDurationRange.x, riseDurationRange.y));
+        yield return MoveLocalPosition(tile, peakPosition, targetLocalPosition, Random.Range(settleDurationRange.x, settleDurationRange.y));
+        tile.localPosition = targetLocalPosition;
+        tileCollider.enabled = true;
+        existingTiles[coordinate] = tile;
+    }
+
+    private static IEnumerator MoveLocalPosition(Transform target, Vector3 from, Vector3 to, float duration)
+    {
+        var safeDuration = Mathf.Max(0.01f, duration);
+        var elapsed = 0f;
+        while (elapsed < safeDuration)
+        {
+            elapsed += Time.deltaTime;
+            target.localPosition = Vector3.LerpUnclamped(from, to, Mathf.SmoothStep(0f, 1f, elapsed / safeDuration));
+            yield return null;
+        }
+    }
+
+    private void CacheGrid()
+    {
+        if (gridCached)
+            return;
+
+        foreach (Transform child in transform)
+        {
+            if (TryParseTileName(child.name, out var coordinate))
+                existingTiles[coordinate] = child;
+        }
+
+        if (!existingTiles.TryGetValue(Vector2Int.zero, out var originTile))
+        {
+            Debug.LogWarning("Floor gridi için Tile_0_0 bulunamadı.", this);
+            return;
+        }
+
+        originLocalPosition = originTile.localPosition;
+        tileLocalRotation = originTile.localRotation;
+        tileLocalScale = originTile.localScale;
+
+        if (!TryGetStep(Vector2Int.right, out xStepLocal) || !TryGetStep(Vector2Int.up, out zStepLocal))
+        {
+            Debug.LogWarning("Floor grid adımı mevcut tile'lardan hesaplanamadı.", this);
+            return;
+        }
+
+        gridCached = true;
+    }
+
+    private bool TryGetStep(Vector2Int direction, out Vector3 step)
+    {
+        foreach (var pair in existingTiles)
+        {
+            if (existingTiles.TryGetValue(pair.Key + direction, out var adjacentTile))
+            {
+                step = adjacentTile.localPosition - pair.Value.localPosition;
+                return true;
+            }
+        }
+
+        step = default;
+        return false;
+    }
+
+    private static bool IsLightTile(Vector2Int coordinate)
+    {
+        return (coordinate.x + coordinate.y) % 2 == 0;
+    }
+
+    private static bool TryParseTileName(string tileName, out Vector2Int coordinate)
+    {
+        coordinate = default;
+        var values = tileName.Split('_');
+        if (values.Length != 3 || values[0] != "Tile" ||
+            !int.TryParse(values[1], out var column) ||
+            !int.TryParse(values[2], out var row))
+            return false;
+
+        coordinate = new Vector2Int(column, row);
+        return true;
+    }
+}

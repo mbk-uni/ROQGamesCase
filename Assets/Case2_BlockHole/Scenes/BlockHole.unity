@@ -2696,7 +2696,14 @@ MonoBehaviour:
   blockTypeVariant: 1
   snapAnchor: {fileID: 0}
   snapRadius: 0.65
-  fragmentContainmentRadius: 0.42
+  fragmentScatterRadius: 0.75
+  missingTiles:
+  - column: 3
+    row: 6
+  - column: 4
+    row: 6
+  fadeDelay: 1
+  fadeDuration: 0.35
 --- !u!1 &501345370
 GameObject:
   m_ObjectHideFlags: 0
@@ -3917,7 +3924,18 @@ MonoBehaviour:
   blockTypeVariant: 2
   snapAnchor: {fileID: 0}
   snapRadius: 0.65
-  fragmentContainmentRadius: 0.42
+  fragmentScatterRadius: 0.75
+  missingTiles:
+  - column: 1
+    row: 4
+  - column: 2
+    row: 4
+  - column: 3
+    row: 4
+  - column: 3
+    row: 3
+  fadeDelay: 1
+  fadeDuration: 0.35
 --- !u!1 &918962834
 GameObject:
   m_ObjectHideFlags: 0
@@ -5006,10 +5024,12 @@ MonoBehaviour:
   blockTypeVariant: 0
   fracturedRoot: {fileID: 0}
   fragmentScatterImpulse: 10
-  fragmentUpwardImpulse: 1
+  fragmentUpwardImpulse: 5
   fragmentAngularImpulse: 100
   fragmentGravityDelay: 0
   fragmentGravityScale: 1
+  fragmentFadeDelay: 1
+  fragmentFadeDuration: 0.35
 --- !u!1 &1334873298
 GameObject:
   m_ObjectHideFlags: 0
@@ -5469,6 +5489,8 @@ GameObject:
   serializedVersion: 6
   m_Component:
   - component: {fileID: 1397146087}
+  - component: {fileID: 1397146088}
+  - component: {fileID: 1397146089}
   m_Layer: 0
   m_Name: Floor
   m_TagString: Untagged
@@ -5540,6 +5562,40 @@ Transform:
   - {fileID: 1382909526}
   m_Father: {fileID: 2134316586}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!114 &1397146088
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1397146086}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: b475c52b86434dfda26c65c280e4a7c2, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::FloorPhysicsSurface
+  includeInactiveTiles: 1
+--- !u!114 &1397146089
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1397146086}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 35a73cc4f88948f6bc6d254c9e898fae, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::FloorTileRebuilder
+  lightFloorPrefab: {fileID: 1584892470810367951, guid: b955a7123fa06420da7c71b35aa8bca2, type: 3}
+  darkFloorPrefab: {fileID: 2385628843932023707, guid: ba9a8549cf28c43dd8a25af109d395f5, type: 3}
+  tilesParent: {fileID: 1397146087}
+  restoreDelay: 1
+  randomStagger: 0.2
+  spawnBelowRange: {x: 0.35, y: 0.65}
+  riseAboveRange: {x: 0.12, y: 0.28}
+  riseDurationRange: {x: 0.2, y: 0.35}
+  settleDurationRange: {x: 0.25, y: 0.45}
 --- !u!1 &1470361863
 GameObject:
   m_ObjectHideFlags: 0
@@ -5953,6 +6009,8 @@ MonoBehaviour:
   fragmentAngularImpulse: 0.03
   fragmentGravityDelay: 0.3
   fragmentGravityScale: 0.28
+  fragmentFadeDelay: 1
+  fragmentFadeDuration: 0.35
 --- !u!1 &1616658223
 GameObject:
   m_ObjectHideFlags: 0
@@ -6898,6 +6956,14 @@ PrefabInstance:
       propertyPath: 'm_Materials.Array.data[0]'
       value: 
       objectReference: {fileID: 2100000, guid: 95d88c768025747f7ae656aee8be6111, type: 2}
+    - target: {fileID: 7014531231151073020, guid: 1f2fd5fc698e84492a1825d1ff98ed2a, type: 3}
+      propertyPath: m_IsActive
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 8899681540679917830, guid: 1f2fd5fc698e84492a1825d1ff98ed2a, type: 3}
+      propertyPath: m_IsActive
+      value: 0
+      objectReference: {fileID: 0}
     m_RemovedComponents: []
     m_RemovedGameObjects: []
     m_AddedGameObjects: []
@@ -6926,7 +6992,12 @@ MonoBehaviour:
   blockTypeVariant: 0
   snapAnchor: {fileID: 0}
   snapRadius: 0.65
-  fragmentContainmentRadius: 0.42
+  fragmentScatterRadius: 1
+  missingTiles:
+  - column: 1
+    row: 6
+  fadeDelay: 1
+  fadeDuration: 0.35
 --- !u!1 &1950086731
 GameObject:
   m_ObjectHideFlags: 0
@@ -7107,6 +7178,67 @@ MeshFilter:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 1996321331}
   m_Mesh: {fileID: 10202, guid: 0000000000000000e000000000000000, type: 0}
+--- !u!1001 &2008112359
+PrefabInstance:
+  m_ObjectHideFlags: 0
+  serializedVersion: 2
+  m_Modification:
+    serializedVersion: 3
+    m_TransformParent: {fileID: 0}
+    m_Modifications:
+    - target: {fileID: 2750385480323301105, guid: 65da3adedf040b74b912dffae8afcc55, type: 3}
+      propertyPath: m_Name
+      value: HoleGlowRays
+      objectReference: {fileID: 0}
+    - target: {fileID: 2750385480323301105, guid: 65da3adedf040b74b912dffae8afcc55, type: 3}
+      propertyPath: m_IsActive
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 5824906875659471619, guid: 65da3adedf040b74b912dffae8afcc55, type: 3}
+      propertyPath: m_LocalPosition.x
+      value: -0.46170115
+      objectReference: {fileID: 0}
+    - target: {fileID: 5824906875659471619, guid: 65da3adedf040b74b912dffae8afcc55, type: 3}
+      propertyPath: m_LocalPosition.y
+      value: -3.463659
+      objectReference: {fileID: 0}
+    - target: {fileID: 5824906875659471619, guid: 65da3adedf040b74b912dffae8afcc55, type: 3}
+      propertyPath: m_LocalPosition.z
+      value: 7.961597
+      objectReference: {fileID: 0}
+    - target: {fileID: 5824906875659471619, guid: 65da3adedf040b74b912dffae8afcc55, type: 3}
+      propertyPath: m_LocalRotation.w
+      value: 0.7071068
+      objectReference: {fileID: 0}
+    - target: {fileID: 5824906875659471619, guid: 65da3adedf040b74b912dffae8afcc55, type: 3}
+      propertyPath: m_LocalRotation.x
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 5824906875659471619, guid: 65da3adedf040b74b912dffae8afcc55, type: 3}
+      propertyPath: m_LocalRotation.y
+      value: -0.7071068
+      objectReference: {fileID: 0}
+    - target: {fileID: 5824906875659471619, guid: 65da3adedf040b74b912dffae8afcc55, type: 3}
+      propertyPath: m_LocalRotation.z
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 5824906875659471619, guid: 65da3adedf040b74b912dffae8afcc55, type: 3}
+      propertyPath: m_LocalEulerAnglesHint.x
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 5824906875659471619, guid: 65da3adedf040b74b912dffae8afcc55, type: 3}
+      propertyPath: m_LocalEulerAnglesHint.y
+      value: -90
+      objectReference: {fileID: 0}
+    - target: {fileID: 5824906875659471619, guid: 65da3adedf040b74b912dffae8afcc55, type: 3}
+      propertyPath: m_LocalEulerAnglesHint.z
+      value: 0
+      objectReference: {fileID: 0}
+    m_RemovedComponents: []
+    m_RemovedGameObjects: []
+    m_AddedGameObjects: []
+    m_AddedComponents: []
+  m_SourcePrefab: {fileID: 100100000, guid: 65da3adedf040b74b912dffae8afcc55, type: 3}
 --- !u!1 &2110944154
 GameObject:
   m_ObjectHideFlags: 0
@@ -7833,6 +7965,8 @@ MonoBehaviour:
   fragmentAngularImpulse: 0.03
   fragmentGravityDelay: 0.3
   fragmentGravityScale: 0.28
+  fragmentFadeDelay: 1
+  fragmentFadeDuration: 0.35
 --- !u!1001 &8640649147099146824
 PrefabInstance:
   m_ObjectHideFlags: 0
@@ -7905,3 +8039,4 @@ SceneRoots:
   - {fileID: 306078052}
   - {fileID: 1626406230}
   - {fileID: 736348755}
+  - {fileID: 2008112359}

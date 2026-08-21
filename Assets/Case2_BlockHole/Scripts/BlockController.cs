@@ -16,6 +16,9 @@ public sealed class BlockController : MonoBehaviour
     [SerializeField, Min(0f)] private float fragmentGravityDelay = 0.3f;
     [Tooltip("Normal yerçekiminin kullanılacak oranı. Düşüşü daha yavaş ve okunur yapar.")]
     [SerializeField, Range(0.01f, 1f)] private float fragmentGravityScale = 0.28f;
+    [Tooltip("Kırılma anından fade-out başlangıcına kadar geçen süre.")]
+    [SerializeField, Min(0f)] private float fragmentFadeDelay = 1f;
+    [SerializeField, Min(0.01f)] private float fragmentFadeDuration = 0.35f;
 
     private readonly List<MeshRenderer> solidRenderers = new();
     private readonly List<Collider> solidColliders = new();
@@ -58,6 +61,7 @@ public sealed class BlockController : MonoBehaviour
 
         fracturedRoot.gameObject.SetActive(true);
         StartCoroutine(ReleaseFragments(hole));
+        FloorTileRebuilder.RestoreFor(hole);
         return true;
     }
 
@@ -108,6 +112,8 @@ public sealed class BlockController : MonoBehaviour
 
             rigidbody.isKinematic = false;
             rigidbody.useGravity = false;
+            rigidbody.collisionDetectionMode = CollisionDetectionMode.ContinuousDynamic;
+            rigidbody.interpolation = RigidbodyInterpolation.Interpolate;
             rigidbody.linearVelocity = Vector3.zero;
             rigidbody.angularVelocity = Vector3.zero;
 
@@ -130,6 +136,12 @@ public sealed class BlockController : MonoBehaviour
                 containment = piece.gameObject.AddComponent<BlockFragmentContainment>();
 
             containment.Configure(center, hole.FragmentContainmentRadius);
+
+            var fadeOut = piece.GetComponent<BlockFragmentFadeOut>();
+            if (fadeOut == null)
+                fadeOut = piece.gameObject.AddComponent<BlockFragmentFadeOut>();
+
+            fadeOut.Play(fragmentFadeDelay, fragmentFadeDuration);
             fragments.Add(rigidbody);
         }
 

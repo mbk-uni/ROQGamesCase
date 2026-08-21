@@ -77,8 +77,12 @@ Material:
   m_EnableInstancingVariants: 0
   m_DoubleSidedGI: 0
   m_CustomRenderQueue: 3000
-  stringTagMap: {}
-  disabledShaderPasses: []
+  stringTagMap:
+    RenderType: Transparent
+  disabledShaderPasses:
+  - DepthOnly
+  - SHADOWCASTER
+  - MOTIONVECTORS
   m_LockedProperties: 
   m_SavedProperties:
     serializedVersion: 3
@@ -185,14 +189,9 @@ Material:
         m_Offset: {x: 0, y: 0}
     m_Ints: []
     m_Floats:
-    - _Surface: 1
-    - _Blend: 0
-    - _SrcBlend: 5
-    - _DstBlend: 10
-    - _ZWrite: 0
-    - _AlphaClip: 0
     - _AddPrecomputedVelocity: 0
     - _Alpha: 1
+    - _AlphaClip: 0
     - _AlphaCutoffValue: 0.25
     - _AlphaOutlineBlend: 1
     - _AlphaOutlineGlow: 5
@@ -201,7 +200,9 @@ Material:
     - _AlphaRoundThreshold: 0.5
     - _AlphaToMask: 0
     - _BillboardY: 0
+    - _Blend: 0
     - _BlendModePreserveSpecular: 1
+    - _BlendOp: 0
     - _BlurHD: 0
     - _BlurIntensity: 10
     - _Brightness: 0
@@ -234,7 +235,8 @@ Material:
     - _DistortAmount: 0.5
     - _DistortTexXSpeed: 5
     - _DistortTexYSpeed: 5
-    - _DstBlendAlpha: 0
+    - _DstBlend: 10
+    - _DstBlendAlpha: 10
     - _EditorDrawers: 6
     - _EnvironmentReflections: 1
     - _FadeAmount: -0.1
@@ -328,6 +330,7 @@ Material:
     - _RotateUvAmount: 0
     - _RoundWaveSpeed: 2
     - _RoundWaveStrength: 0.7
+    - _SampleGI: 0
     - _ShadowAlpha: 0.5
     - _ShadowX: 0.1
     - _ShadowY: -0.05
@@ -341,7 +344,9 @@ Material:
     - _Smoothness: 0.5
     - _SmoothnessTextureChannel: 0
     - _SpecularHighlights: 1
+    - _SrcBlend: 5
     - _SrcBlendAlpha: 1
+    - _Surface: 1
     - _TextureScrollXSpeed: 1
     - _TextureScrollYSpeed: 0
     - _TwistUvAmount: 1
@@ -359,6 +364,7 @@ Material:
     - _WorkflowMode: 1
     - _XRMotionVectorsPass: 1
     - _ZTestMode: 4
+    - _ZWrite: 0
     - _ZoomUvAmount: 0.5
     m_Colors:
     - _AlphaOutlineColor: {r: 1, g: 1, b: 1, a: 1}
