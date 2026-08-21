@@ -19,7 +19,18 @@ public sealed class BlockHoldDragController : MonoBehaviour
     [SerializeField, Range(0f, 45f)] private float maximumTiltAngle = 12f;
     [SerializeField, Min(0f)] private float rotationFollowSharpness = 18f;
 
+    [Header("Matching Hole Snap")]
+    [SerializeField, Min(0f)] private float snapFollowSharpness = 28f;
+    [Tooltip("Blok snap sırasında ulaşacağı dünya Y seviyesi.")]
+    [SerializeField] private float snapYPosition = -0.9f;
+    [Tooltip("Snap durumundan çıkmak için gereken minimum pointer hareketi (piksel).")]
+    [SerializeField, Min(0f)] private float unsnapDragThresholdPixels = 12f;
+
     private Transform heldBlock;
+    private BlockController heldBlockController;
+    private HoleController snappedHole;
+    private HoleController ignoredHoleUntilExited;
+    private Vector2 snapPointerPosition;
     private Vector3 heldRestPosition;
     private Quaternion heldRestRotation;
     private Vector3 dragOffset;
@@ -65,7 +76,14 @@ public sealed class BlockHoldDragController : MonoBehaviour
         if (blockRoot == null)
             return;
 
+        var blockController = blockRoot.GetComponentInChildren<BlockController>(true);
+        if (blockController == null || blockController.IsConsumed)
+            return;
+
         heldBlock = blockRoot;
+        heldBlockController = blockController;
+        snappedHole = null;
+        ignoredHoleUntilExited = null;
         heldRestPosition = heldBlock.position;
         heldRestRotation = heldBlock.rotation;
         SetOutlineEnabled(heldBlock, true);
@@ -86,6 +104,18 @@ public sealed class BlockHoldDragController : MonoBehaviour
 
     private void UpdateHeldBlock(Vector2 pointerPosition)
     {
+        if (snappedHole != null)
+        {
+            var pointerDelta = pointerPosition - snapPointerPosition;
+            if (pointerDelta.sqrMagnitude <= unsnapDragThresholdPixels * unsnapDragThresholdPixels)
+            {
+                SmoothSnapToHole();
+                return;
+            }
+
+            DetachFromHole(pointerPosition);
+        }
+
         var cameraToUse = interactionCamera != null ? interactionCamera : Camera.main;
         if (cameraToUse == null)
             return;
@@ -119,17 +149,90 @@ public sealed class BlockHoldDragController : MonoBehaviour
             heldBlock.rotation,
             targetRotation,
             GetFrameBlend(rotationFollowSharpness));
+
+        var matchingHole = FindMatchingHole();
+        if (matchingHole != null)
+        {
+            snappedHole = matchingHole;
+            snapPointerPosition = pointerPosition;
+        }
     }
 
     private void EndHold()
     {
         SetOutlineEnabled(heldBlock, false);
+
+        if (snappedHole != null && heldBlockController != null)
+        {
+            var snapPosition = GetSnapPosition(snappedHole);
+            heldBlock.SetPositionAndRotation(snapPosition, snappedHole.SnapRotation);
+            heldBlockController.ConsumeAt(snappedHole, snapPosition);
+            ClearHeldBlock();
+            return;
+        }
+
         heldBlock.position = new Vector3(
             heldBlock.position.x,
             heldRestPosition.y,
             heldBlock.position.z);
         heldBlock.rotation = heldRestRotation;
+        ClearHeldBlock();
+    }
+
+    private void SmoothSnapToHole()
+    {
+        var snapBlend = GetFrameBlend(snapFollowSharpness);
+        heldBlock.position = Vector3.Lerp(heldBlock.position, GetSnapPosition(snappedHole), snapBlend);
+        heldBlock.rotation = Quaternion.Slerp(heldBlock.rotation, snappedHole.SnapRotation, snapBlend);
+    }
+
+    private Vector3 GetSnapPosition(HoleController hole)
+    {
+        var snapPosition = hole.SnapPosition;
+        snapPosition.y = snapYPosition;
+        return snapPosition;
+    }
+
+    private void DetachFromHole(Vector2 pointerPosition)
+    {
+        var cameraToUse = interactionCamera != null ? interactionCamera : Camera.main;
+        if (cameraToUse != null)
+        {
+            var ray = cameraToUse.ScreenPointToRay(pointerPosition);
+            if (dragPlane.Raycast(ray, out var enterDistance))
+            {
+                dragOffset = heldBlock.position - ray.GetPoint(enterDistance);
+                dragOffset.y = 0f;
+            }
+        }
+
+        ignoredHoleUntilExited = snappedHole;
+        snappedHole = null;
+    }
+
+    private HoleController FindMatchingHole()
+    {
+        if (ignoredHoleUntilExited != null && !ignoredHoleUntilExited.IsInsideSnapRange(heldBlock.position))
+            ignoredHoleUntilExited = null;
+
+        foreach (var hole in FindObjectsByType<HoleController>(FindObjectsSortMode.None))
+        {
+            if (hole == ignoredHoleUntilExited)
+                continue;
+
+            if (hole.CanAccept(heldBlockController) && hole.IsInsideSnapRange(heldBlock.position))
+                return hole;
+        }
+
+        return null;
+    }
+
+    private void ClearHeldBlock()
+    {
         heldBlock = null;
+        heldBlockController = null;
+        snappedHole = null;
+        ignoredHoleUntilExited = null;
     }
 
     private Transform FindDirectBlockChild(Transform hitTransform)
