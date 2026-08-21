@@ -12,7 +12,8 @@ public sealed class FloorTileRebuilder : MonoBehaviour
 
     [Header("Restore Animation")]
     [SerializeField, Min(0f)] private float restoreDelay = 1f;
-    [SerializeField, Min(0f)] private float randomStagger = 0.2f;
+    [SerializeField, Min(0f)] private float minimumTileDelay = 0.08f;
+    [SerializeField, Min(0f)] private float maximumTileDelay = 0.2f;
     [Tooltip("Yükselme animasyonunun tamamlandığı local Y seviyesi.")]
     [SerializeField] private float finalLocalY = -2.468f;
     [SerializeField] private Vector2 spawnBelowRange = new(0.35f, 0.65f);
@@ -56,19 +57,23 @@ public sealed class FloorTileRebuilder : MonoBehaviour
         if (!gridCached)
             return;
 
+        var delayBeforeTile = restoreDelay;
         foreach (var tile in hole.MissingTiles)
         {
             var coordinate = new Vector2Int(tile.column, tile.row);
             if (existingTiles.ContainsKey(coordinate) || !restoredTiles.Add(coordinate))
                 continue;
 
-            StartCoroutine(RestoreTileRoutine(coordinate));
+            StartCoroutine(RestoreTileRoutine(coordinate, delayBeforeTile));
+            delayBeforeTile += Random.Range(
+                Mathf.Min(minimumTileDelay, maximumTileDelay),
+                Mathf.Max(minimumTileDelay, maximumTileDelay));
         }
     }
 
-    private IEnumerator RestoreTileRoutine(Vector2Int coordinate)
+    private IEnumerator RestoreTileRoutine(Vector2Int coordinate, float delay)
     {
-        yield return new WaitForSeconds(restoreDelay + Random.Range(0f, randomStagger));
+        yield return new WaitForSeconds(delay);
 
         var prefab = IsLightTile(coordinate) ? lightFloorPrefab : darkFloorPrefab;
         if (prefab == null)
