@@ -13,8 +13,11 @@ public sealed class FloorTileRebuilder : MonoBehaviour
     [Header("Restore Animation")]
     [SerializeField, Min(0f)] private float restoreDelay = 1f;
     [SerializeField, Min(0f)] private float randomStagger = 0.2f;
+    [Tooltip("Yükselme animasyonunun tamamlandığı local Y seviyesi.")]
+    [SerializeField] private float finalLocalY = -2.468f;
     [SerializeField] private Vector2 spawnBelowRange = new(0.35f, 0.65f);
-    [SerializeField] private Vector2 riseAboveRange = new(0.12f, 0.28f);
+    [SerializeField, Min(0f)] private float minimumRiseHeight = 0.55f;
+    [SerializeField, Min(0f)] private float maximumRiseHeight = 1.1f;
     [SerializeField] private Vector2 riseDurationRange = new(0.2f, 0.35f);
     [SerializeField] private Vector2 settleDurationRange = new(0.25f, 0.45f);
 
@@ -75,13 +78,18 @@ public sealed class FloorTileRebuilder : MonoBehaviour
         }
 
         var targetLocalPosition = originLocalPosition + xStepLocal * coordinate.x + zStepLocal * coordinate.y;
+        targetLocalPosition.y = finalLocalY;
         var tile = Instantiate(prefab, tilesParent != null ? tilesParent : transform).transform;
         tile.name = $"Tile_{coordinate.x}_{coordinate.y}";
         tile.localRotation = tileLocalRotation;
-        tile.localScale = tileLocalScale;
+        var prefabScale = tile.localScale;
+        tile.localScale = new Vector3(tileLocalScale.x, prefabScale.y, tileLocalScale.z);
 
         var spawnPosition = targetLocalPosition - Vector3.up * Random.Range(spawnBelowRange.x, spawnBelowRange.y);
-        var peakPosition = targetLocalPosition + Vector3.up * Random.Range(riseAboveRange.x, riseAboveRange.y);
+        var riseHeight = Random.Range(
+            Mathf.Min(minimumRiseHeight, maximumRiseHeight),
+            Mathf.Max(minimumRiseHeight, maximumRiseHeight));
+        var peakPosition = targetLocalPosition + Vector3.up * riseHeight;
         tile.localPosition = spawnPosition;
 
         var tileCollider = tile.GetComponent<Collider>();

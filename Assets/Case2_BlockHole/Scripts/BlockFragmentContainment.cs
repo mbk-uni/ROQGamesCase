@@ -40,12 +40,6 @@ public sealed class BlockFragmentContainment : MonoBehaviour
         if (planarOffset.sqrMagnitude <= containmentRadius * containmentRadius)
             return;
 
-        var clampedOffset = planarOffset.normalized * containmentRadius;
-        fragmentRigidbody.position = new Vector3(
-            center.x + clampedOffset.x,
-            position.y,
-            center.z + clampedOffset.z);
-
         var velocity = fragmentRigidbody.linearVelocity;
         var outwardSpeed = Vector3.Dot(new Vector3(velocity.x, 0f, velocity.z), planarOffset.normalized);
         if (outwardSpeed > 0f)
