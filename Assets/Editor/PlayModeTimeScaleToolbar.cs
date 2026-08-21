@@ -16,7 +16,7 @@ namespace Game.Editor
     {
         private const string PlayModeControlsPath = "Play Mode Controls";
         private const string GameSceneButtonName = "FitTheShape";
-        private const string BlackHoleSceneButtonName = "BlackHole";
+        private const string BlackHoleSceneButtonName = "BlockHole";
         private const string StickerdomSceneButtonName = "Stickerdom";
         private const string BucaSceneButtonName = "Buca";
         private const string TimeScaleMenuName = "game-time-scale-menu";
@@ -71,7 +71,7 @@ namespace Game.Editor
                 blackHoleSceneButton = new Button(OpenBlackHoleScene)
                 {
                     name = BlackHoleSceneButtonName,
-                    text = "BlackHole",
+                    text = "BlockHole",
                     tooltip = "Open Assets/Case2_BlockHole/Scenes/BlockHole.unity"
                 };
 

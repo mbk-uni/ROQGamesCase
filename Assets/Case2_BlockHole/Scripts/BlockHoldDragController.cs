@@ -26,6 +26,10 @@ public sealed class BlockHoldDragController : MonoBehaviour
     [Tooltip("Snap durumundan çıkmak için gereken minimum pointer hareketi (piksel).")]
     [SerializeField, Min(0f)] private float unsnapDragThresholdPixels = 12f;
 
+    [Header("Sound")]
+    [SerializeField] private string holdReleaseSfxId = "BlockHoleSFX";
+    [SerializeField, Range(0f, 1f)] private float holdReleaseSfxVolume = 1f;
+
     private Transform heldBlock;
     private BlockController heldBlockController;
     private HoleController snappedHole;
@@ -160,6 +164,9 @@ public sealed class BlockHoldDragController : MonoBehaviour
 
     private void EndHold()
     {
+        if (AudioManager.Instance != null)
+            AudioManager.Instance.PlaySfx(holdReleaseSfxId, holdReleaseSfxVolume);
+
         SetOutlineEnabled(heldBlock, false);
 
         if (snappedHole != null && heldBlockController != null)
