@@ -154,15 +154,13 @@ MonoBehaviour:
   - {fileID: 9021565123528027863}
   fracturedRoot: {fileID: 0}
   fragmentScatterImpulse: 200
-  fragmentUpwardImpulse: 50
+  fragmentUpwardImpulse: 200
   fragmentAngularImpulse: 1
   fragmentGravityDelay: 0.2
   fragmentGravityScale: 5
   fragmentFadeDelay: 1
-  fragmentFallingFadeDelay: 0.25
   fragmentFadeDuration: 0.35
-  fragmentDespawnBelowY: -20
-  debrisBurstDelay: 0
+  fragmentDespawnBelowY: -10
 --- !u!1 &8486633890369094708
 GameObject:
   m_ObjectHideFlags: 0

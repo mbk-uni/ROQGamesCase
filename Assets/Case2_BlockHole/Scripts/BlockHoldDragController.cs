@@ -1,5 +1,6 @@
 using UnityEngine;
 using UnityEngine.InputSystem;
+using System.Collections.Generic;
 
 /// <summary>
 /// Attach this to the Blocks parent. Its direct child blocks can then be held
@@ -22,7 +23,7 @@ public sealed class BlockHoldDragController : MonoBehaviour
     [Header("Matching Hole Snap")]
     [SerializeField, Min(0f)] private float snapFollowSharpness = 28f;
     [Tooltip("Blok snap sırasında ulaşacağı dünya Y seviyesi.")]
-    [SerializeField] private float snapYPosition = -0.9f;
+    [SerializeField] private float snapYPosition = -1.1f;
     [Tooltip("Snap durumundan çıkmak için gereken minimum pointer hareketi (piksel).")]
     [SerializeField, Min(0f)] private float unsnapDragThresholdPixels = 12f;
 
@@ -39,6 +40,7 @@ public sealed class BlockHoldDragController : MonoBehaviour
     private Quaternion heldRestRotation;
     private Vector3 dragOffset;
     private Plane dragPlane;
+    private readonly List<HoleController> heldBlockGlowHoles = new();
 
     private void Update()
     {
@@ -90,7 +92,9 @@ public sealed class BlockHoldDragController : MonoBehaviour
         ignoredHoleUntilExited = null;
         heldRestPosition = heldBlock.position;
         heldRestRotation = heldBlock.rotation;
+        heldBlockController.SetSolidMaterialsOpaque(false);
         SetOutlineEnabled(heldBlock, true);
+        SetMatchingHoleGlowsActive(true);
         dragPlane = new Plane(Vector3.up, heldRestPosition + Vector3.up * liftHeight);
 
         if (dragPlane.Raycast(ray, out var enterDistance))
@@ -157,20 +161,31 @@ public sealed class BlockHoldDragController : MonoBehaviour
         var matchingHole = FindMatchingHole();
         if (matchingHole != null)
         {
+            SetOutlineEnabled(heldBlock, false);
             snappedHole = matchingHole;
             snapPointerPosition = pointerPosition;
+            snappedHole.SetGlowVfxActive(false);
+            heldBlockController.SetSolidMaterialsOpaque(true);
+            heldBlockController.BeginLShapeSortingPrioritySequence();
         }
     }
 
     private void EndHold()
     {
         SetOutlineEnabled(heldBlock, false);
+        if (snappedHole != null)
+            snappedHole.SetGlowVfxActive(false);
 
         if (snappedHole != null && heldBlockController != null)
         {
             var snapPosition = GetSnapPosition(snappedHole);
             heldBlock.SetPositionAndRotation(snapPosition, snappedHole.SnapRotation);
             var didConsume = heldBlockController.ConsumeAt(snappedHole, snapPosition);
+            if (!didConsume)
+            {
+                heldBlockController.SetSolidMaterialsOpaque(false);
+                heldBlockController.CancelLShapeSortingPrioritySequence();
+            }
             if (didConsume && AudioManager.Instance != null)
                 AudioManager.Instance.PlaySfx(holdReleaseSfxId, holdReleaseSfxVolume);
 
@@ -183,6 +198,8 @@ public sealed class BlockHoldDragController : MonoBehaviour
             heldRestPosition.y,
             heldBlock.position.z);
         heldBlock.rotation = heldRestRotation;
+        heldBlockController?.SetSolidMaterialsOpaque(false);
+        heldBlockController?.CancelLShapeSortingPrioritySequence();
         ClearHeldBlock();
     }
 
@@ -214,7 +231,11 @@ public sealed class BlockHoldDragController : MonoBehaviour
         }
 
         ignoredHoleUntilExited = snappedHole;
+        ignoredHoleUntilExited.SetGlowVfxActive(true);
         snappedHole = null;
+        heldBlockController?.SetSolidMaterialsOpaque(false);
+        heldBlockController?.CancelLShapeSortingPrioritySequence();
+        SetOutlineEnabled(heldBlock, true);
     }
 
     private HoleController FindMatchingHole()
@@ -236,10 +257,37 @@ public sealed class BlockHoldDragController : MonoBehaviour
 
     private void ClearHeldBlock()
     {
+        SetMatchingHoleGlowsActive(false);
         heldBlock = null;
         heldBlockController = null;
         snappedHole = null;
         ignoredHoleUntilExited = null;
+    }
+
+    private void SetMatchingHoleGlowsActive(bool isActive)
+    {
+        if (isActive)
+        {
+            heldBlockGlowHoles.Clear();
+            foreach (var hole in FindObjectsByType<HoleController>(FindObjectsSortMode.None))
+            {
+                if (!hole.CanAccept(heldBlockController))
+                    continue;
+
+                heldBlockGlowHoles.Add(hole);
+                hole.SetGlowVfxActive(true);
+            }
+
+            return;
+        }
+
+        foreach (var hole in heldBlockGlowHoles)
+        {
+            if (hole != null)
+                hole.SetGlowVfxActive(false);
+        }
+
+        heldBlockGlowHoles.Clear();
     }
 
     private Transform FindDirectBlockChild(Transform hitTransform)

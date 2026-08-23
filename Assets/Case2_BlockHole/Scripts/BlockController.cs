@@ -18,21 +18,16 @@ public sealed class BlockController : MonoBehaviour
     [SerializeField, Min(0f)] private float fragmentGravityDelay = 0.3f;
     [Tooltip("Normal yerçekiminin kullanılacak oranı. Düşüşü daha yavaş ve okunur yapar.")]
     [SerializeField, Range(0.01f, 5f)] private float fragmentGravityScale = 0.28f;
-    [Tooltip("Floor üzerinde kalan parçanın fade-out başlangıcına kadar bekleyeceği süre.")]
+    [Tooltip("Kırılma sonrası tüm parçaların fade-out başlangıcına kadar bekleyeceği süre.")]
     [SerializeField, Min(0f)] private float fragmentFadeDelay = 1f;
-    [Tooltip("Floor'a temas etmeyip hole'dan düşen parçanın fade-out başlangıcına kadar bekleyeceği süre.")]
-    [SerializeField, Min(0f)] private float fragmentFallingFadeDelay = 0.25f;
     [SerializeField, Min(0.01f)] private float fragmentFadeDuration = 0.35f;
     [Tooltip("Parça bu dünya Y değerine ulaştığında fade-out beklemeden doğrudan kapanır.")]
     [SerializeField] private float fragmentDespawnBelowY = -10f;
 
-    [Header("Break VFX")]
-    [Tooltip("Kırılma başladıktan sonra DebrisBurst'ün oynatılacağı gecikme.")]
-    [SerializeField, Min(0f)] private float debrisBurstDelay;
-
     private readonly List<MeshRenderer> solidRenderers = new();
     private readonly List<Collider> solidColliders = new();
     private readonly List<Transform> activeFracturedRoots = new();
+    private readonly List<Material> temporarilyLoweredPriorityMaterials = new();
     private bool referencesCached;
 
     public BlockType BlockTypeVariant => blockTypeVariant;
@@ -70,44 +65,20 @@ public sealed class BlockController : MonoBehaviour
             return true;
         }
 
+        var isLShapeBreak = blockTypeVariant == BlockType.LShape;
+        if (isLShapeBreak)
+            BeginLShapeSortingPrioritySequence();
+
         foreach (var root in activeFracturedRoots)
             root.gameObject.SetActive(true);
 
         PlayDustPuffs();
-        PlayBreakVfx(hole);
         StartCoroutine(ReleaseFragments(hole));
-        FloorTileRebuilder.RestoreFor(hole);
+        if (isLShapeBreak)
+            FloorTileRebuilder.RestoreFor(hole, RestoreOtherBlocksSortingPriority);
+        else
+            FloorTileRebuilder.RestoreFor(hole);
         return true;
-    }
-
-    private void PlayBreakVfx(HoleController hole)
-    {
-        if (debrisBurstDelay <= 0f)
-        {
-            PlayDebrisBurst(hole);
-            return;
-        }
-
-        StartCoroutine(PlayDebrisBurstAfterDelay(hole));
-    }
-
-    private IEnumerator PlayDebrisBurstAfterDelay(HoleController hole)
-    {
-        yield return new WaitForSeconds(debrisBurstDelay);
-        PlayDebrisBurst(hole);
-    }
-
-    private static void PlayDebrisBurst(HoleController hole)
-    {
-        if (PoolManager.Instance == null || hole == null)
-            return;
-
-        var anchor = hole.VfxAnchor;
-        if (anchor == null)
-            return;
-
-        var startColor = hole.TryGetVfxColor(out var holeColor) ? holeColor : Color.white;
-        PoolManager.Instance.PlayVfx("DebrisBurst", anchor.position, anchor.rotation, null, startColor);
     }
 
     private void PlayDustPuffs()
@@ -149,6 +120,131 @@ public sealed class BlockController : MonoBehaviour
 
         color = Color.white;
         return false;
+    }
+
+    public void BeginLShapeSortingPrioritySequence()
+    {
+        if (blockTypeVariant != BlockType.LShape)
+            return;
+
+        SetOtherBlocksSortingPriority(-1);
+        Debug.Log($"{name}: L snap sequence started. " +
+                  $"{temporarilyLoweredPriorityMaterials.Count} material priority set to -1.", this);
+    }
+
+    public void CancelLShapeSortingPrioritySequence()
+    {
+        if (blockTypeVariant == BlockType.LShape)
+            RestoreOtherBlocksSortingPriority();
+    }
+
+    public void SetSolidMaterialsOpaque(bool isOpaque)
+    {
+        CacheReferences();
+        foreach (var renderer in solidRenderers)
+        {
+            if (renderer == null)
+                continue;
+
+            foreach (var material in renderer.materials)
+            {
+                if (material != null)
+                    SetMaterialSurfaceType(material, isOpaque);
+            }
+        }
+    }
+
+    private void SetOtherBlocksSortingPriority(int sortingPriority)
+    {
+        temporarilyLoweredPriorityMaterials.Clear();
+
+        foreach (var otherBlock in FindObjectsByType<BlockController>(FindObjectsSortMode.None))
+        {
+            if (otherBlock == this || otherBlock.IsConsumed)
+                continue;
+
+            otherBlock.CacheReferences();
+            foreach (var renderer in otherBlock.solidRenderers)
+            {
+                if (renderer == null)
+                    continue;
+
+                foreach (var material in renderer.materials)
+                {
+                    if (material == null || temporarilyLoweredPriorityMaterials.Contains(material))
+                        continue;
+
+                    temporarilyLoweredPriorityMaterials.Add(material);
+                    SetMaterialSortingPriority(material, sortingPriority);
+                }
+            }
+        }
+    }
+
+    private void RestoreOtherBlocksSortingPriority()
+    {
+        var restoredMaterialCount = temporarilyLoweredPriorityMaterials.Count;
+        foreach (var material in temporarilyLoweredPriorityMaterials)
+        {
+            if (material != null)
+                SetMaterialSortingPriority(material, 50);
+        }
+
+        temporarilyLoweredPriorityMaterials.Clear();
+        if (restoredMaterialCount > 0)
+            Debug.Log($"{name}: Floor tile restore completed. " +
+                      $"{restoredMaterialCount} material priority restored to 50.", this);
+    }
+
+    private static void SetMaterialSortingPriority(Material material, int sortingPriority)
+    {
+        if (material.HasProperty("_QueueOffset"))
+            material.SetFloat("_QueueOffset", sortingPriority);
+
+        var baseQueue = material.HasProperty("_Surface") && material.GetFloat("_Surface") > 0.5f
+            ? 3000
+            : 2000;
+        material.renderQueue = baseQueue + sortingPriority;
+
+        var queueOffset = material.HasProperty("_QueueOffset")
+            ? material.GetFloat("_QueueOffset").ToString()
+            : "not supported";
+        Debug.Log($"{material.name}: Queue Offset = {queueOffset}, " +
+                  $"Render Queue = {material.renderQueue}.");
+    }
+
+    private static void SetMaterialSurfaceType(Material material, bool isOpaque)
+    {
+        var queueOffset = material.HasProperty("_QueueOffset")
+            ? Mathf.RoundToInt(material.GetFloat("_QueueOffset"))
+            : 0;
+
+        if (material.HasProperty("_Surface"))
+            material.SetFloat("_Surface", isOpaque ? 0f : 1f);
+
+        if (material.HasProperty("_SrcBlend"))
+            material.SetFloat("_SrcBlend", (float)UnityEngine.Rendering.BlendMode.One);
+        if (material.HasProperty("_DstBlend"))
+        {
+            var destinationBlend = isOpaque
+                ? UnityEngine.Rendering.BlendMode.Zero
+                : UnityEngine.Rendering.BlendMode.OneMinusSrcAlpha;
+            material.SetFloat("_DstBlend", (float)destinationBlend);
+        }
+        if (material.HasProperty("_ZWrite"))
+            material.SetFloat("_ZWrite", isOpaque ? 1f : 0f);
+
+        if (isOpaque)
+        {
+            material.DisableKeyword("_SURFACE_TYPE_TRANSPARENT");
+            material.SetOverrideTag("RenderType", "Opaque");
+            material.renderQueue = 2000 + queueOffset;
+            return;
+        }
+
+        material.EnableKeyword("_SURFACE_TYPE_TRANSPARENT");
+        material.SetOverrideTag("RenderType", "Transparent");
+        material.renderQueue = 3000 + queueOffset;
     }
 
     private void CacheReferences()
@@ -264,7 +360,6 @@ public sealed class BlockController : MonoBehaviour
                     fadeOut = piece.gameObject.AddComponent<BlockFragmentFadeOut>();
 
                 fadeOut.PlayByFloorState(
-                    fragmentFallingFadeDelay,
                     fragmentFadeDelay,
                     fragmentFadeDuration,
                     fragmentDespawnBelowY);

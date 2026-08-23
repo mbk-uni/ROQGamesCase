@@ -188,15 +188,13 @@ MonoBehaviour:
   - {fileID: 1209789835844069364}
   fracturedRoot: {fileID: 0}
   fragmentScatterImpulse: 200
-  fragmentUpwardImpulse: 50
+  fragmentUpwardImpulse: 200
   fragmentAngularImpulse: 1
   fragmentGravityDelay: 0.2
   fragmentGravityScale: 5
   fragmentFadeDelay: 1
-  fragmentFallingFadeDelay: 0.25
   fragmentFadeDuration: 0.35
-  fragmentDespawnBelowY: -20
-  debrisBurstDelay: 0
+  fragmentDespawnBelowY: -10
 --- !u!1001 &2657370982172131172
 PrefabInstance:
   m_ObjectHideFlags: 0

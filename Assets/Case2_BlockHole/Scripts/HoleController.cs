@@ -30,6 +30,9 @@ public sealed class HoleController : MonoBehaviour
     [Tooltip("Boş bırakılırsa Hole objesindeki Renderer kullanılır.")]
     [SerializeField] private Renderer vfxColorRenderer;
 
+    [Header("Snap Glow")]
+    [SerializeField] private ParticleSystem glowVfx;
+
     public bool IsOccupied { get; private set; }
     public Transform SnapAnchor => snapAnchor != null ? snapAnchor : transform;
     public Vector3 SnapPosition => SnapAnchor.position;
@@ -37,6 +40,11 @@ public sealed class HoleController : MonoBehaviour
     public Transform VfxAnchor => vfxAnchor != null ? vfxAnchor : FindVfxAnchor();
     public float FragmentContainmentRadius => fragmentScatterRadius;
     public IReadOnlyList<MissingFloorTile> MissingTiles => missingTiles;
+
+    private void Awake()
+    {
+        SetGlowVfxActive(false);
+    }
 
     /// <summary>
     /// Gets the visible Hole material colour for a break VFX. URP materials use
@@ -88,6 +96,7 @@ public sealed class HoleController : MonoBehaviour
         if (CanAccept(block))
         {
             IsOccupied = true;
+            SetGlowVfxActive(false);
 
             var fadeOut = GetComponent<BlockFragmentFadeOut>();
             if (fadeOut == null)
@@ -95,6 +104,23 @@ public sealed class HoleController : MonoBehaviour
 
             fadeOut.Play(fadeDelay, fadeDuration);
         }
+    }
+
+    public void SetGlowVfxActive(bool isActive)
+    {
+        if (glowVfx == null)
+            return;
+
+        if (!isActive)
+        {
+            glowVfx.Stop(true, ParticleSystemStopBehavior.StopEmittingAndClear);
+            glowVfx.gameObject.SetActive(false);
+            return;
+        }
+
+        glowVfx.gameObject.SetActive(true);
+        glowVfx.Stop(true, ParticleSystemStopBehavior.StopEmittingAndClear);
+        glowVfx.Play(true);
     }
 
     private Transform FindVfxAnchor()

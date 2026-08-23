@@ -31,19 +31,23 @@ public sealed class FloorTileRebuilder : MonoBehaviour
     private Vector3 tileLocalScale;
     private Quaternion tileLocalRotation;
 
-    public static void RestoreFor(HoleController hole)
+    public static void RestoreFor(HoleController hole, System.Action onRestoreComplete = null)
     {
         if (hole == null || hole.MissingTiles.Count == 0)
+        {
+            onRestoreComplete?.Invoke();
             return;
+        }
 
         var rebuilder = FindFirstObjectByType<FloorTileRebuilder>();
         if (rebuilder == null)
         {
             Debug.LogWarning("FloorTileRebuilder sahnede bulunamadı.", hole);
+            onRestoreComplete?.Invoke();
             return;
         }
 
-        rebuilder.RestoreTilesFor(hole);
+        rebuilder.RestoreTilesFor(hole, onRestoreComplete);
     }
 
     private void Awake()
@@ -51,27 +55,48 @@ public sealed class FloorTileRebuilder : MonoBehaviour
         CacheGrid();
     }
 
-    private void RestoreTilesFor(HoleController hole)
+    private void RestoreTilesFor(HoleController hole, System.Action onRestoreComplete)
     {
         CacheGrid();
         if (!gridCached)
+        {
+            onRestoreComplete?.Invoke();
             return;
+        }
 
         var delayBeforeTile = restoreDelay;
+        var tileRoutines = new List<(Vector2Int coordinate, float delay)>();
         foreach (var tile in hole.MissingTiles)
         {
             var coordinate = new Vector2Int(tile.column, tile.row);
             if (existingTiles.ContainsKey(coordinate) || !restoredTiles.Add(coordinate))
                 continue;
 
-            StartCoroutine(RestoreTileRoutine(coordinate, delayBeforeTile));
+            tileRoutines.Add((coordinate, delayBeforeTile));
             delayBeforeTile += Random.Range(
                 Mathf.Min(minimumTileDelay, maximumTileDelay),
                 Mathf.Max(minimumTileDelay, maximumTileDelay));
         }
+
+        if (tileRoutines.Count == 0)
+        {
+            onRestoreComplete?.Invoke();
+            return;
+        }
+
+        var completedTileCount = 0;
+        System.Action onTileRestoreComplete = () =>
+        {
+            completedTileCount++;
+            if (completedTileCount == tileRoutines.Count)
+                onRestoreComplete?.Invoke();
+        };
+
+        foreach (var tileRoutine in tileRoutines)
+            StartCoroutine(RestoreTileRoutine(tileRoutine.coordinate, tileRoutine.delay, onTileRestoreComplete));
     }
 
-    private IEnumerator RestoreTileRoutine(Vector2Int coordinate, float delay)
+    private IEnumerator RestoreTileRoutine(Vector2Int coordinate, float delay, System.Action onComplete)
     {
         yield return new WaitForSeconds(delay);
 
@@ -79,6 +104,7 @@ public sealed class FloorTileRebuilder : MonoBehaviour
         if (prefab == null)
         {
             Debug.LogWarning($"Tile_{coordinate.x}_{coordinate.y} için gerekli Floor prefabı atanmadı.", this);
+            onComplete?.Invoke();
             yield break;
         }
 
@@ -107,6 +133,7 @@ public sealed class FloorTileRebuilder : MonoBehaviour
         tile.localPosition = targetLocalPosition;
         tileCollider.enabled = true;
         existingTiles[coordinate] = tile;
+        onComplete?.Invoke();
     }
 
     private static IEnumerator MoveLocalPosition(Transform target, Vector3 from, Vector3 to, float duration)
