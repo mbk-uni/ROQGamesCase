@@ -18,7 +18,11 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 2759458149711909390, guid: 2f77878140559486c8a60be3fd513359, type: 3}
       propertyPath: lengthInSec
-      value: 0.1
+      value: 1
+      objectReference: {fileID: 0}
+    - target: {fileID: 2759458149711909390, guid: 2f77878140559486c8a60be3fd513359, type: 3}
+      propertyPath: ShapeModule.type
+      value: 10
       objectReference: {fileID: 0}
     - target: {fileID: 2759458149711909390, guid: 2f77878140559486c8a60be3fd513359, type: 3}
       propertyPath: moveWithTransform
@@ -57,8 +61,16 @@ PrefabInstance:
       value: -0.12
       objectReference: {fileID: 0}
     - target: {fileID: 2759458149711909390, guid: 2f77878140559486c8a60be3fd513359, type: 3}
+      propertyPath: EmissionModule.m_BurstCount
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 2759458149711909390, guid: 2f77878140559486c8a60be3fd513359, type: 3}
       propertyPath: RotationModule.curve.scalar
       value: 1.4
+      objectReference: {fileID: 0}
+    - target: {fileID: 2759458149711909390, guid: 2f77878140559486c8a60be3fd513359, type: 3}
+      propertyPath: ShapeModule.radiusThickness
+      value: 1
       objectReference: {fileID: 0}
     - target: {fileID: 2759458149711909390, guid: 2f77878140559486c8a60be3fd513359, type: 3}
       propertyPath: VelocityModule.inWorldSpace
@@ -101,8 +113,12 @@ PrefabInstance:
       value: 0.24
       objectReference: {fileID: 0}
     - target: {fileID: 2759458149711909390, guid: 2f77878140559486c8a60be3fd513359, type: 3}
+      propertyPath: EmissionModule.m_Bursts.Array.size
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 2759458149711909390, guid: 2f77878140559486c8a60be3fd513359, type: 3}
       propertyPath: EmissionModule.rateOverTime.scalar
-      value: 18
+      value: 75
       objectReference: {fileID: 0}
     - target: {fileID: 2759458149711909390, guid: 2f77878140559486c8a60be3fd513359, type: 3}
       propertyPath: InitialModule.startLifetime.scalar
@@ -317,8 +333,8 @@ MonoBehaviour:
   particles: {fileID: 5015123577782900452}
   material: {fileID: 2100000, guid: c3b10000c19c1ead00000000000000b2, type: 2}
   color: {r: 1, g: 0.9, b: 0.15, a: 1}
-  emissionRate: 18
-  initialBurstCount: 2
+  emissionRate: 75
+  initialBurstCount: 1
   lifetimeRange: {x: 0.45, y: 0.75}
   sizeRange: {x: 0.24, y: 0.5}
   spawnRadius: 0.38

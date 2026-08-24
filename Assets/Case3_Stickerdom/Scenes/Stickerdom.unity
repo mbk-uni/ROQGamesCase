@@ -256,10 +256,6 @@ PrefabInstance:
       propertyPath: m_Name
       value: AttachBurst
       objectReference: {fileID: 0}
-    - target: {fileID: 7548656658955928381, guid: 2f77878140559486c8a60be3fd513359, type: 3}
-      propertyPath: m_IsActive
-      value: 0
-      objectReference: {fileID: 0}
     m_RemovedComponents: []
     m_RemovedGameObjects: []
     m_AddedGameObjects: []
@@ -293,7 +289,7 @@ Transform:
   serializedVersion: 2
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
   m_LocalPosition: {x: 2.5, y: 3.45, z: 0.2}
-  m_LocalScale: {x: 0.7, y: 0.7, z: 1}
+  m_LocalScale: {x: 0.9, y: 0.9, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children: []
   m_Father: {fileID: 1856208315}
@@ -1199,6 +1195,57 @@ MonoBehaviour:
   m_ShadowLayerMask: 1
   m_RenderingLayers: 1
   m_ShadowRenderingLayers: 1
+--- !u!1 &945672206
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 945672208}
+  - component: {fileID: 945672207}
+  m_Layer: 0
+  m_Name: PoolManager
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!114 &945672207
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 945672206}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 301fbd4e6ede246d59ed532020f72b20, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::PoolManager
+  pools:
+  - id: AttachBurst
+    prefab: {fileID: 7548656658955928381, guid: 2f77878140559486c8a60be3fd513359, type: 3}
+    initialSize: 100
+  - id: StickerStarBurst
+    prefab: {fileID: 2703089448029283905, guid: 701ee89ecf7b8416fa1d48b015cc0c63, type: 3}
+    initialSize: 8
+--- !u!4 &945672208
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 945672206}
+  serializedVersion: 2
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 0, y: -0, z: 0}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 0}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!1 &954508343
 GameObject:
   m_ObjectHideFlags: 0
@@ -1696,6 +1743,7 @@ MonoBehaviour:
   arrivalScaleUpEase: 27
   arrivalScaleReturnDuration: 0.14
   arrivalScaleReturnEase: 4
+  arrivalVfxPoolId: AttachBurst
   peelThresholdSfxId: StickerdomSFX_1
   peelSfxProgressThreshold: 0.2
   peelSfxVolume: 1
@@ -2081,6 +2129,7 @@ MonoBehaviour:
   arrivalScaleUpEase: 27
   arrivalScaleReturnDuration: 0.14
   arrivalScaleReturnEase: 4
+  arrivalVfxPoolId: AttachBurst
   peelThresholdSfxId: StickerdomSFX_1
   peelSfxProgressThreshold: 0.5
   peelSfxVolume: 1
@@ -2093,6 +2142,7 @@ SceneRoots:
   m_Roots:
   - {fileID: 174122680}
   - {fileID: 160820410}
+  - {fileID: 945672208}
   - {fileID: 324843279}
   - {fileID: 339643459}
   - {fileID: 888576695}

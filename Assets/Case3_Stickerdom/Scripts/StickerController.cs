@@ -44,6 +44,9 @@ public class StickerController : MonoBehaviour
     [SerializeField, Min(0.01f)] private float arrivalScaleReturnDuration = 0.14f;
     [SerializeField] private Ease arrivalScaleReturnEase = Ease.InOutSine;
 
+    [Header("Arrival VFX")]
+    [SerializeField] private string arrivalVfxPoolId = "AttachBurst";
+
     [Header("Audio")]
     [SerializeField] private string peelThresholdSfxId = DefaultPeelThresholdSfxId;
     [SerializeField, Range(0f, 1f)] private float peelSfxProgressThreshold = 0.5f;
@@ -164,6 +167,7 @@ public class StickerController : MonoBehaviour
             .InsertCallback(restoreStartTime, () => StopTravelTrail(false))
             .Insert(restoreStartTime, restoreTween)
             .InsertCallback(placementCompleteSfxTime, PlayPlacementCompleteSfx)
+            .InsertCallback(scaleStartTime, PlayArrivalVfx)
             .Insert(scaleStartTime, transform.DOScale(
                     restingScale * arrivalScaleMultiplier,
                     arrivalScaleUpDuration)
@@ -188,6 +192,21 @@ public class StickerController : MonoBehaviour
         PlaySfx(
             GetSfxIdOrDefault(placementCompleteSfxId, DefaultPlacementCompleteSfxId),
             placementCompleteSfxVolume);
+    }
+
+    private void PlayArrivalVfx()
+    {
+        if (PoolManager.Instance == null)
+            return;
+
+        if (!string.IsNullOrWhiteSpace(arrivalVfxPoolId))
+        {
+            PoolManager.Instance.PlayVfx(
+                arrivalVfxPoolId,
+                transform.position,
+                transform.rotation);
+        }
+
     }
 
     private void SetPeelProgressAndCheckSfx(float value)
