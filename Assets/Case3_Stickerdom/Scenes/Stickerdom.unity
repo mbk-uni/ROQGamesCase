@@ -348,6 +348,7 @@ GameObject:
   m_Component:
   - component: {fileID: 367521627}
   - component: {fileID: 367521628}
+  - component: {fileID: 367521629}
   m_Layer: 0
   m_Name: Ghost_Hayvan
   m_TagString: Untagged
@@ -365,7 +366,7 @@ Transform:
   serializedVersion: 2
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
   m_LocalPosition: {x: -2.5, y: 3.45, z: 0.2}
-  m_LocalScale: {x: 1.0526316, y: 1.0526316, z: 1}
+  m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children: []
   m_Father: {fileID: 1856208315}
@@ -429,6 +430,19 @@ SpriteRenderer:
   m_SpriteTileMode: 0
   m_WasSpriteAssigned: 1
   m_SpriteSortPoint: 0
+--- !u!114 &367521629
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 367521626}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 77faaa2763e6249e9a180333b7daa3fc, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::StickerHolder
+  stickerType: 0
 --- !u!1 &548803014
 GameObject:
   m_ObjectHideFlags: 0
@@ -1129,6 +1143,10 @@ PrefabInstance:
       propertyPath: m_Name
       value: DrawPile
       objectReference: {fileID: 0}
+    - target: {fileID: 8325552295971550619, guid: 7afe95c4ecea84c6481a90d75e970f0f, type: 3}
+      propertyPath: m_IsActive
+      value: 0
+      objectReference: {fileID: 0}
     - target: {fileID: 9213445708212093506, guid: 7afe95c4ecea84c6481a90d75e970f0f, type: 3}
       propertyPath: m_LocalScale.x
       value: 1.35
@@ -1184,19 +1202,7 @@ PrefabInstance:
     m_RemovedComponents: []
     m_RemovedGameObjects: []
     m_AddedGameObjects: []
-    m_AddedComponents:
-    - targetCorrespondingSourceObject: {fileID: 3365113720616380651, guid: 7afe95c4ecea84c6481a90d75e970f0f, type: 3}
-      insertIndex: -1
-      addedObject: {fileID: 0}
-    - targetCorrespondingSourceObject: {fileID: 858453486275106281, guid: 7afe95c4ecea84c6481a90d75e970f0f, type: 3}
-      insertIndex: -1
-      addedObject: {fileID: 0}
-    - targetCorrespondingSourceObject: {fileID: 4289648260387461777, guid: 7afe95c4ecea84c6481a90d75e970f0f, type: 3}
-      insertIndex: -1
-      addedObject: {fileID: 0}
-    - targetCorrespondingSourceObject: {fileID: 985817174874382530, guid: 7afe95c4ecea84c6481a90d75e970f0f, type: 3}
-      insertIndex: -1
-      addedObject: {fileID: 0}
+    m_AddedComponents: []
   m_SourcePrefab: {fileID: 100100000, guid: 7afe95c4ecea84c6481a90d75e970f0f, type: 3}
 --- !u!1 &1644672740
 GameObject:
@@ -1459,6 +1465,7 @@ GameObject:
   m_Component:
   - component: {fileID: 2059011743}
   - component: {fileID: 2059011744}
+  - component: {fileID: 2059011745}
   m_Layer: 0
   m_Name: Sticker_Hayvan
   m_TagString: Untagged
@@ -1474,13 +1481,13 @@ Transform:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 2059011742}
   serializedVersion: 2
-  m_LocalRotation: {x: 0, y: 0, z: 0.061048545, w: 0.99813485}
-  m_LocalPosition: {x: -4.3, y: -6.75, z: 0}
-  m_LocalScale: {x: 0.80091536, y: 0.80091536, z: 1}
+  m_LocalRotation: {x: -0, y: -0, z: 0.0059969807, w: 0.99998206}
+  m_LocalPosition: {x: -4.62, y: -7.03, z: 0}
+  m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children: []
   m_Father: {fileID: 2005150150}
-  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0.687}
 --- !u!212 &2059011744
 SpriteRenderer:
   serializedVersion: 2
@@ -1540,6 +1547,19 @@ SpriteRenderer:
   m_SpriteTileMode: 0
   m_WasSpriteAssigned: 1
   m_SpriteSortPoint: 0
+--- !u!114 &2059011745
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 2059011742}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: beabb209431e94930862c206eb897872, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::StickerController
+  stickerType: 0
 --- !u!1660057539 &9223372036854775807
 SceneRoots:
   m_ObjectHideFlags: 0
