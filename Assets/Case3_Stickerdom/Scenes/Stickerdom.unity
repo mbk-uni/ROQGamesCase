@@ -1687,6 +1687,9 @@ MonoBehaviour:
   moveEase: 4
   restoreDuration: 0.65
   restoreEase: 4
+  travelTrailPrefab: {fileID: 61001001, guid: a31f4c7e9d0248fda725ecf844d61001, type: 3}
+  travelStarPrefab: {fileID: 797396614967298007, guid: a31f4c7e9d0248fda725ecf844d61002, type: 3}
+  travelTrailStopDistance: 0.75
   arrivalScaleMultiplier: 1.12
   arrivalScaleStartOverlap: 0.25
   arrivalScaleUpDuration: 0.12
@@ -2069,6 +2072,9 @@ MonoBehaviour:
   moveEase: 4
   restoreDuration: 0.45
   restoreEase: 4
+  travelTrailPrefab: {fileID: 0}
+  travelStarPrefab: {fileID: 0}
+  travelTrailStopDistance: 0.75
   arrivalScaleMultiplier: 1.12
   arrivalScaleStartOverlap: 0.12
   arrivalScaleUpDuration: 0.12

@@ -29,6 +29,12 @@ public class StickerController : MonoBehaviour
     [SerializeField, Min(0.01f)] private float restoreDuration = 0.45f;
     [SerializeField] private Ease restoreEase = Ease.InOutSine;
 
+    [Header("Travel VFX")]
+    [SerializeField] private GameObject travelTrailPrefab;
+    [SerializeField] private GameObject travelStarPrefab;
+    [Tooltip("Sticker holder'a bu dünya mesafesi kadar yaklaştığında trail emission kapanır. 0 değeri holder'a kadar sürdürür.")]
+    [SerializeField, Min(0f)] private float travelTrailStopDistance = 0.75f;
+
     [Header("Arrival Scale Pop")]
     [SerializeField, Min(1f)] private float arrivalScaleMultiplier = 1.12f;
     [Tooltip("Scale pop'u peel restore bitmeden kaç saniye önce başlatır. 0 değeri tam bitişi bekler.")]
@@ -52,6 +58,8 @@ public class StickerController : MonoBehaviour
     private Sequence placementSequence;
     private bool isPlacing;
     private bool hasPlayedPeelThresholdSfx;
+    private StickerTravelTrailVfx travelTrailVfx;
+    private StickerStarTrailVfx travelStarVfx;
 
     public StickerType StickerType => stickerType;
     public bool IsPlacing => isPlacing;
@@ -62,12 +70,20 @@ public class StickerController : MonoBehaviour
             peelController = GetComponent<StickerPeelController>();
 
         EnsureClickCollider();
+        EnsureTravelTrail();
+        EnsureTravelStarParticles();
         FindMatchingHolder();
     }
 
     private void Update()
     {
-        if (isPlacing || !TryGetTapPosition(out var screenPosition))
+        if (isPlacing)
+        {
+            StopTravelTrailWhenCloseToHolder();
+            return;
+        }
+
+        if (!TryGetTapPosition(out var screenPosition))
             return;
 
         if (WasThisStickerTapped(screenPosition))
@@ -79,6 +95,7 @@ public class StickerController : MonoBehaviour
         placementSequence?.Kill();
         placementSequence = null;
         isPlacing = false;
+        StopTravelTrail(true);
     }
 
     /// <summary>
@@ -108,6 +125,7 @@ public class StickerController : MonoBehaviour
         hasPlayedPeelThresholdSfx = false;
         clickCollider.enabled = false;
         peelController.ResetPeel();
+        StopTravelTrail(true);
 
         var peelTween = DOTween.To(
                 () => peelController.Progress,
@@ -129,6 +147,7 @@ public class StickerController : MonoBehaviour
         var moveStartTime = Mathf.Max(0f, peelDuration - moveStartOverlap);
         var restoreStartTime = moveStartTime + moveDuration;
         var restoreEndTime = restoreStartTime + restoreDuration;
+        var trailStartTime = Mathf.Min(peelDuration, restoreStartTime);
         var scaleStartTime = Mathf.Max(
             restoreStartTime,
             restoreEndTime - arrivalScaleStartOverlap);
@@ -141,6 +160,8 @@ public class StickerController : MonoBehaviour
         placementSequence = DOTween.Sequence()
             .Insert(0f, peelTween)
             .Insert(moveStartTime, moveTween)
+            .InsertCallback(trailStartTime, StartTravelTrail)
+            .InsertCallback(restoreStartTime, () => StopTravelTrail(false))
             .Insert(restoreStartTime, restoreTween)
             .InsertCallback(placementCompleteSfxTime, PlayPlacementCompleteSfx)
             .Insert(scaleStartTime, transform.DOScale(
@@ -157,6 +178,7 @@ public class StickerController : MonoBehaviour
     {
         transform.position = targetHolder.transform.position;
         peelController.Progress = 0f;
+        StopTravelTrail(false);
         isPlacing = false;
         placementSequence = null;
     }
@@ -222,6 +244,89 @@ public class StickerController : MonoBehaviour
         boxCollider.size = spriteRenderer.sprite.bounds.size;
         boxCollider.offset = spriteRenderer.sprite.bounds.center;
         clickCollider = boxCollider;
+    }
+
+    private void EnsureTravelTrail()
+    {
+        if (travelTrailVfx == null)
+            travelTrailVfx = GetComponentInChildren<StickerTravelTrailVfx>(true);
+
+        if (travelTrailVfx == null && travelTrailPrefab != null)
+        {
+            var trailObject = Instantiate(travelTrailPrefab, transform);
+            trailObject.name = "Sticker Travel Trail";
+            travelTrailVfx = trailObject.GetComponent<StickerTravelTrailVfx>();
+        }
+
+        if (travelTrailVfx == null)
+            return;
+
+        var stickerRenderer = GetComponent<SpriteRenderer>();
+        travelTrailVfx.ConfigureSorting(
+            stickerRenderer.sortingLayerID,
+            stickerRenderer.sortingOrder);
+        travelTrailVfx.Stop(true);
+    }
+
+    private void StartTravelTrail()
+    {
+        travelTrailVfx?.Play();
+
+        StartTravelStarParticles();
+    }
+
+    private void StopTravelTrail(bool clearImmediately)
+    {
+        travelTrailVfx?.Stop(clearImmediately);
+
+        StopTravelStarParticles(clearImmediately);
+    }
+
+    private void EnsureTravelStarParticles()
+    {
+        if (travelStarVfx == null)
+            travelStarVfx = GetComponentInChildren<StickerStarTrailVfx>(true);
+
+        if (travelStarVfx == null && travelStarPrefab != null)
+        {
+            var starObject = Instantiate(travelStarPrefab, transform);
+            starObject.name = "Sticker Star Trail";
+            travelStarVfx = starObject.GetComponent<StickerStarTrailVfx>();
+        }
+
+        if (travelStarVfx == null)
+            return;
+
+        var stickerRenderer = GetComponent<SpriteRenderer>();
+        travelStarVfx.ConfigureSorting(
+            stickerRenderer.sortingLayerID,
+            stickerRenderer.sortingOrder);
+        travelStarVfx.Stop(true);
+    }
+
+    private void StartTravelStarParticles()
+    {
+        travelStarVfx?.Play();
+    }
+
+    private void StopTravelStarParticles(bool clearImmediately)
+    {
+        travelStarVfx?.Stop(clearImmediately);
+    }
+
+    private void StopTravelTrailWhenCloseToHolder()
+    {
+        var trailRenderer = travelTrailVfx != null ? travelTrailVfx.Renderer : null;
+        if (trailRenderer == null || !trailRenderer.emitting || targetHolder == null)
+            return;
+
+        var stopDistance = Mathf.Max(0f, travelTrailStopDistance);
+        if (stopDistance <= 0f)
+            return;
+
+        var distanceToHolderSqr = (transform.position - targetHolder.transform.position).sqrMagnitude;
+        if (distanceToHolderSqr <= stopDistance * stopDistance)
+            StopTravelTrail(false);
     }
 
     private bool WasThisStickerTapped(Vector2 screenPosition)
