@@ -1214,6 +1214,7 @@ GameObject:
   m_Component:
   - component: {fileID: 1644672741}
   - component: {fileID: 1644672742}
+  - component: {fileID: 1644672743}
   m_Layer: 0
   m_Name: Sticker_Meyve
   m_TagString: Untagged
@@ -1262,7 +1263,7 @@ SpriteRenderer:
   m_RenderingLayerMask: 1
   m_RendererPriority: 0
   m_Materials:
-  - {fileID: 2100000, guid: 9dfc825aed78fcd4ba02077103263b40, type: 2}
+  - {fileID: 2100000, guid: cb53665dc03484b3ebdf55ce8330f4c9, type: 2}
   m_StaticBatchInfo:
     firstSubMesh: 0
     subMeshCount: 0
@@ -1295,6 +1296,48 @@ SpriteRenderer:
   m_SpriteTileMode: 0
   m_WasSpriteAssigned: 1
   m_SpriteSortPoint: 0
+--- !u!114 &1644672743
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1644672740}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 3224766b189a5408bb8ac076f90fd7c1, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::StickerPeelController
+  corner: 1
+  progress: 0
+  angleOffsetDegrees: 0
+  travel: 1.6
+  playOnEnable: 0
+  duration: 0.65
+  easing:
+    serializedVersion: 2
+    m_Curve:
+    - serializedVersion: 3
+      time: 0
+      value: 0
+      inSlope: 0
+      outSlope: 0
+      tangentMode: 0
+      weightedMode: 0
+      inWeight: 0
+      outWeight: 0
+    - serializedVersion: 3
+      time: 1
+      value: 1
+      inSlope: 0
+      outSlope: 0
+      tangentMode: 0
+      weightedMode: 0
+      inWeight: 0
+      outWeight: 0
+    m_PreInfinity: 2
+    m_PostInfinity: 2
+    m_RotationOrder: 4
 --- !u!1 &1856208314
 GameObject:
   m_ObjectHideFlags: 0
