@@ -6,6 +6,9 @@ using UnityEngine.InputSystem;
 [RequireComponent(typeof(SpriteRenderer))]
 public class StickerController : MonoBehaviour
 {
+    private const string DefaultPeelThresholdSfxId = "StickerdomSFX_1";
+    private const string DefaultPlacementCompleteSfxId = "StickerdomSFX_2";
+
     [Header("Sticker")]
     [SerializeField] private StickerType stickerType;
 
@@ -26,10 +29,29 @@ public class StickerController : MonoBehaviour
     [SerializeField, Min(0.01f)] private float restoreDuration = 0.45f;
     [SerializeField] private Ease restoreEase = Ease.InOutSine;
 
+    [Header("Arrival Scale Pop")]
+    [SerializeField, Min(1f)] private float arrivalScaleMultiplier = 1.12f;
+    [Tooltip("Scale pop'u peel restore bitmeden kaç saniye önce başlatır. 0 değeri tam bitişi bekler.")]
+    [SerializeField, Min(0f)] private float arrivalScaleStartOverlap = 0.12f;
+    [SerializeField, Min(0.01f)] private float arrivalScaleUpDuration = 0.12f;
+    [SerializeField] private Ease arrivalScaleUpEase = Ease.OutBack;
+    [SerializeField, Min(0.01f)] private float arrivalScaleReturnDuration = 0.14f;
+    [SerializeField] private Ease arrivalScaleReturnEase = Ease.InOutSine;
+
+    [Header("Audio")]
+    [SerializeField] private string peelThresholdSfxId = DefaultPeelThresholdSfxId;
+    [SerializeField, Range(0f, 1f)] private float peelSfxProgressThreshold = 0.5f;
+    [SerializeField, Range(0f, 1f)] private float peelSfxVolume = 1f;
+    [SerializeField] private string placementCompleteSfxId = DefaultPlacementCompleteSfxId;
+    [Tooltip("Holder SFX'ini peel restore bitmeden kaç saniye önce çalar. 0 değeri tam bitişi bekler.")]
+    [SerializeField, Min(0f)] private float placementCompleteSfxStartOverlap = 0.12f;
+    [SerializeField, Range(0f, 1f)] private float placementCompleteSfxVolume = 1f;
+
     private Collider2D clickCollider;
     private StickerHolder targetHolder;
     private Sequence placementSequence;
     private bool isPlacing;
+    private bool hasPlayedPeelThresholdSfx;
 
     public StickerType StickerType => stickerType;
     public bool IsPlacing => isPlacing;
@@ -83,12 +105,13 @@ public class StickerController : MonoBehaviour
         }
 
         isPlacing = true;
+        hasPlayedPeelThresholdSfx = false;
         clickCollider.enabled = false;
         peelController.ResetPeel();
 
         var peelTween = DOTween.To(
                 () => peelController.Progress,
-                value => peelController.Progress = value,
+                SetPeelProgressAndCheckSfx,
                 peeledProgress,
                 peelDuration)
             .SetEase(peelEase);
@@ -101,14 +124,31 @@ public class StickerController : MonoBehaviour
                 restoreDuration)
             .SetEase(restoreEase);
 
+        var restingScale = transform.localScale;
+
         var moveStartTime = Mathf.Max(0f, peelDuration - moveStartOverlap);
         var restoreStartTime = moveStartTime + moveDuration;
+        var restoreEndTime = restoreStartTime + restoreDuration;
+        var scaleStartTime = Mathf.Max(
+            restoreStartTime,
+            restoreEndTime - arrivalScaleStartOverlap);
+        var scaleReturnStartTime = scaleStartTime + arrivalScaleUpDuration;
+        var placementCompleteSfxTime = Mathf.Max(
+            restoreStartTime,
+            restoreEndTime - placementCompleteSfxStartOverlap);
 
         placementSequence?.Kill();
         placementSequence = DOTween.Sequence()
             .Insert(0f, peelTween)
             .Insert(moveStartTime, moveTween)
             .Insert(restoreStartTime, restoreTween)
+            .InsertCallback(placementCompleteSfxTime, PlayPlacementCompleteSfx)
+            .Insert(scaleStartTime, transform.DOScale(
+                    restingScale * arrivalScaleMultiplier,
+                    arrivalScaleUpDuration)
+                .SetEase(arrivalScaleUpEase))
+            .Insert(scaleReturnStartTime, transform.DOScale(restingScale, arrivalScaleReturnDuration)
+                .SetEase(arrivalScaleReturnEase))
             .OnComplete(CompletePlacement)
             .OnKill(() => placementSequence = null);
     }
@@ -119,6 +159,39 @@ public class StickerController : MonoBehaviour
         peelController.Progress = 0f;
         isPlacing = false;
         placementSequence = null;
+    }
+
+    private void PlayPlacementCompleteSfx()
+    {
+        PlaySfx(
+            GetSfxIdOrDefault(placementCompleteSfxId, DefaultPlacementCompleteSfxId),
+            placementCompleteSfxVolume);
+    }
+
+    private void SetPeelProgressAndCheckSfx(float value)
+    {
+        peelController.Progress = value;
+
+        if (hasPlayedPeelThresholdSfx || value < peelSfxProgressThreshold)
+            return;
+
+        hasPlayedPeelThresholdSfx = true;
+        PlaySfx(
+            GetSfxIdOrDefault(peelThresholdSfxId, DefaultPeelThresholdSfxId),
+            peelSfxVolume);
+    }
+
+    private void PlaySfx(string sfxId, float volume)
+    {
+        if (AudioManager.Instance == null)
+            return;
+
+        AudioManager.Instance.PlaySfx(sfxId, volume);
+    }
+
+    private static string GetSfxIdOrDefault(string configuredId, string defaultId)
+    {
+        return string.IsNullOrWhiteSpace(configuredId) ? defaultId : configuredId;
     }
 
     private void FindMatchingHolder()
