@@ -1355,7 +1355,7 @@ MonoBehaviour:
   rotationFollowSharpness: 18
   snapFollowSharpness: 15
   snapYPosition: -1.1
-  unsnapDragThresholdPixels: 50
+  unsnapDragThresholdPixels: 100
   holdReleaseSfxId: BlockHoleSFX
   holdReleaseSfxVolume: 1
 --- !u!1 &303033831
