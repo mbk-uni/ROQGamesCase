@@ -42,7 +42,6 @@ public sealed class FloorTileRebuilder : MonoBehaviour
         var rebuilder = FindFirstObjectByType<FloorTileRebuilder>();
         if (rebuilder == null)
         {
-            Debug.LogWarning("FloorTileRebuilder sahnede bulunamadı.", hole);
             onRestoreComplete?.Invoke();
             return;
         }
@@ -103,7 +102,6 @@ public sealed class FloorTileRebuilder : MonoBehaviour
         var prefab = IsLightTile(coordinate) ? lightFloorPrefab : darkFloorPrefab;
         if (prefab == null)
         {
-            Debug.LogWarning($"Tile_{coordinate.x}_{coordinate.y} için gerekli Floor prefabı atanmadı.", this);
             onComplete?.Invoke();
             yield break;
         }
@@ -161,7 +159,6 @@ public sealed class FloorTileRebuilder : MonoBehaviour
 
         if (!existingTiles.TryGetValue(Vector2Int.zero, out var originTile))
         {
-            Debug.LogWarning("Floor gridi için Tile_0_0 bulunamadı.", this);
             return;
         }
 
@@ -171,7 +168,6 @@ public sealed class FloorTileRebuilder : MonoBehaviour
 
         if (!TryGetStep(Vector2Int.right, out xStepLocal) || !TryGetStep(Vector2Int.up, out zStepLocal))
         {
-            Debug.LogWarning("Floor grid adımı mevcut tile'lardan hesaplanamadı.", this);
             return;
         }
 

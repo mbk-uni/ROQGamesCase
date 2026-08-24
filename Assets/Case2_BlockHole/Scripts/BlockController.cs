@@ -61,7 +61,6 @@ public sealed class BlockController : MonoBehaviour
 
         if (activeFracturedRoots.Count == 0)
         {
-            Debug.LogWarning($"{name} için Fractured root objesi bulunamadı.", this);
             return true;
         }
 
@@ -128,8 +127,6 @@ public sealed class BlockController : MonoBehaviour
             return;
 
         SetOtherBlocksSortingPriority(-1);
-        Debug.Log($"{name}: L snap sequence started. " +
-                  $"{temporarilyLoweredPriorityMaterials.Count} material priority set to -1.", this);
     }
 
     public void CancelLShapeSortingPrioritySequence()
@@ -183,7 +180,6 @@ public sealed class BlockController : MonoBehaviour
 
     private void RestoreOtherBlocksSortingPriority()
     {
-        var restoredMaterialCount = temporarilyLoweredPriorityMaterials.Count;
         foreach (var material in temporarilyLoweredPriorityMaterials)
         {
             if (material != null)
@@ -191,9 +187,6 @@ public sealed class BlockController : MonoBehaviour
         }
 
         temporarilyLoweredPriorityMaterials.Clear();
-        if (restoredMaterialCount > 0)
-            Debug.Log($"{name}: Floor tile restore completed. " +
-                      $"{restoredMaterialCount} material priority restored to 50.", this);
     }
 
     private static void SetMaterialSortingPriority(Material material, int sortingPriority)
@@ -205,12 +198,6 @@ public sealed class BlockController : MonoBehaviour
             ? 3000
             : 2000;
         material.renderQueue = baseQueue + sortingPriority;
-
-        var queueOffset = material.HasProperty("_QueueOffset")
-            ? material.GetFloat("_QueueOffset").ToString()
-            : "not supported";
-        Debug.Log($"{material.name}: Queue Offset = {queueOffset}, " +
-                  $"Render Queue = {material.renderQueue}.");
     }
 
     private static void SetMaterialSurfaceType(Material material, bool isOpaque)
