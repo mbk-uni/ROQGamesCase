@@ -6,11 +6,14 @@ Shader "Custom/StickerPeelURP"
         _Color ("Tint", Color) = (1,1,1,1)
 
         _PeelProgress ("Peel Progress", Range(0, 1)) = 0
-        [Toggle] _InvertProgress ("Invert Progress", Float) = 1
+        [Toggle] _InvertProgress ("Invert Progress", Float) = 0
         _PeelCorner ("Peel Corner UV", Vector) = (1,0,0,0)
         _PeelDirection ("Direction From Corner", Vector) = (-0.707,0.707,0,0)
         _Travel ("Travel", Range(0.01, 2.0)) = 1.6
+        _EndDetachDistance ("End Detach Distance", Range(0, 1)) = 0.25
         _FoldPieceRotation ("Fold Piece Rotation", Range(-180, 180)) = 0
+        _RenderPadding ("Outside Render Padding", Range(0, 4)) = 2.5
+        [HideInInspector] _SpriteSize ("Sprite Size", Vector) = (1,1,0,0)
 
         _BackColor ("Sticker Back Color", Color) = (1,0.88,0.47,1)
         _BackTextureAmount ("Back Texture Visibility", Range(0, 1)) = 0.08
@@ -47,7 +50,10 @@ Shader "Custom/StickerPeelURP"
             float4 _PeelCorner;
             float4 _PeelDirection;
             float _Travel;
+            float _EndDetachDistance;
             float _FoldPieceRotation;
+            float _RenderPadding;
+            float4 _SpriteSize;
             float4 _BackColor;
             float _BackTextureAmount;
             float4 _BackTint;
@@ -78,9 +84,17 @@ Shader "Custom/StickerPeelURP"
         Varyings vert(Attributes input)
         {
             Varyings output;
-            output.positionCS = TransformObjectToHClip(input.positionOS.xyz);
+
+            // SpriteRenderer normally rasterizes only its original quad. Expand
+            // that quad and continue the UV coordinates beyond 0..1 so the
+            // reflected sheet can remain visible outside the original bounds.
+            float2 cornerDirection = sign(input.uv - 0.5);
+            float3 expandedPositionOS = input.positionOS.xyz;
+            expandedPositionOS.xy += cornerDirection * _SpriteSize.xy * _RenderPadding;
+
+            output.positionCS = TransformObjectToHClip(expandedPositionOS);
             output.color = input.color;
-            output.uv = input.uv;
+            output.uv = (input.uv - 0.5) * (1.0 + 2.0 * _RenderPadding) + 0.5;
             return output;
         }
 
@@ -112,7 +126,17 @@ Shader "Custom/StickerPeelURP"
             float2 direction = normalize(_PeelDirection.xy);
 
             float foldProgress = lerp(_PeelProgress, 1.0 - _PeelProgress, _InvertProgress);
-            float2 foldPoint = _PeelCorner.xy + direction * (foldProgress * _Travel);
+
+            // Guarantee that Progress=1 moves the hinge beyond every corner of
+            // the original sprite, regardless of peel angle.
+            float projection00 = dot(float2(0.0, 0.0) - _PeelCorner.xy, direction);
+            float projection10 = dot(float2(1.0, 0.0) - _PeelCorner.xy, direction);
+            float projection01 = dot(float2(0.0, 1.0) - _PeelCorner.xy, direction);
+            float projection11 = dot(float2(1.0, 1.0) - _PeelCorner.xy, direction);
+            float farthestProjection = max(max(projection00, projection10), max(projection01, projection11));
+            float completeTravel = max(_Travel, farthestProjection + _EndDetachDistance);
+
+            float2 foldPoint = _PeelCorner.xy + direction * (foldProgress * completeTravel);
             float signedDistance = dot(uv - foldPoint, direction);
             float attachedSide = step(0.0, signedDistance);
 
@@ -127,7 +151,9 @@ Shader "Custom/StickerPeelURP"
             float sourceIsInsideSticker = IsInside01(foldedSourceUV);
             float2 backArtworkUV = lerp(foldOutputUV, foldedSourceUV, _MirrorBackArtwork);
 
-            float4 front = SAMPLE_TEXTURE2D(_MainTex, sampler_MainTex, uv) * input.color * _Color;
+            float frontIsInsideSticker = IsInside01(uv);
+            float4 front = SAMPLE_TEXTURE2D(_MainTex, sampler_MainTex, uv)
+                * input.color * _Color * frontIsInsideSticker;
             float4 backShapeSample = SAMPLE_TEXTURE2D(_MainTex, sampler_MainTex, foldedSourceUV);
             float4 backArtworkSample = SAMPLE_TEXTURE2D(_MainTex, sampler_MainTex, backArtworkUV);
 
@@ -147,11 +173,14 @@ Shader "Custom/StickerPeelURP"
 
             float shadow = (1.0 - smoothstep(0.0, _ShadowWidth, signedDistance))
                 * attachedSide * (1.0 - backRegion);
+            float fullyDetached = smoothstep(0.985, 1.0, foldProgress);
+            shadow *= 1.0 - fullyDetached;
             front.rgb *= 1.0 - shadow * _ShadowStrength;
 
             float4 color = lerp(front, back, backRegion) * attachedSide;
 
             float foldEdge = 1.0 - smoothstep(_FoldEdgeWidth, _FoldEdgeWidth * 2.0, abs(signedDistance));
+            foldEdge *= 1.0 - fullyDetached;
             float edge = foldEdge * attachedSide * max(front.a, backAlpha) * _FoldColor.a;
             color.rgb = lerp(color.rgb, _FoldColor.rgb, edge);
             color.a = max(color.a, edge);

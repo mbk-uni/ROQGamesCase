@@ -100,18 +100,21 @@ Material:
     - _DstBlendAlpha: 0
     - _EnvironmentReflections: 1
     - _FoldEdgeWidth: 0.012
+    - _FoldPieceRotation: 0
     - _GlossMapScale: 0
     - _Glossiness: 0
     - _GlossyReflections: 0
+    - _InvertProgress: 0
     - _Metallic: 0
     - _MirrorBackArtwork: 1
     - _OcclusionStrength: 1
     - _Parallax: 0.005
-    - _PeelProgress: 0
+    - _PeelProgress: 0.394
     - _QueueOffset: 0
     - _ReceiveShadows: 1
+    - _RenderPadding: 1.5
     - _ShadowStrength: 0.32
-    - _ShadowWidth: 0.06
+    - _ShadowWidth: 0.5
     - _Smoothness: 0.5
     - _SmoothnessTextureChannel: 0
     - _SpecularHighlights: 1
@@ -129,9 +132,10 @@ Material:
     - _Color: {r: 1, g: 1, b: 1, a: 1}
     - _EmissionColor: {r: 0, g: 0, b: 0, a: 1}
     - _FoldColor: {r: 1, g: 0.96, b: 0.7, a: 1}
-    - _PeelCorner: {r: 1, g: 1, b: 0, a: 0}
-    - _PeelDirection: {r: -0.707, g: 0.707, b: 0, a: 0}
+    - _PeelCorner: {r: 1, g: 0.03, b: 0, a: 0}
+    - _PeelDirection: {r: -0.70710677, g: 0.74, b: 0, a: 0}
     - _SpecColor: {r: 0.19999996, g: 0.19999996, b: 0.19999996, a: 1}
+    - _SpriteSize: {r: 1, g: 1, b: 0, a: 0}
   m_BuildTextureStacks: []
   m_AllowLocking: 1
 --- !u!114 &6676179524581440983
