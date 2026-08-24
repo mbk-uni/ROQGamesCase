@@ -24,6 +24,16 @@ public class StickerStarTrailVfx : MonoBehaviour
     [SerializeField, Min(1)] private int sortingOrderOffset = 1;
 
     public ParticleSystem Particles => particles;
+    public float ReleaseDelay
+    {
+        get
+        {
+            EnsureParticles();
+            return particles != null
+                ? Mathf.Max(0.01f, particles.main.startLifetime.constantMax)
+                : 0.01f;
+        }
+    }
 
     private void Awake()
     {
@@ -44,6 +54,13 @@ public class StickerStarTrailVfx : MonoBehaviour
 
         particleRenderer.sortingLayerID = sortingLayerId;
         particleRenderer.sortingOrder = stickerSortingOrder - Mathf.Max(1, sortingOrderOffset);
+    }
+
+    public void AttachTo(Transform owner)
+    {
+        transform.SetParent(owner, false);
+        transform.localPosition = localOffset;
+        transform.localRotation = Quaternion.identity;
     }
 
     public void Play()

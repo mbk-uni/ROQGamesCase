@@ -30,8 +30,8 @@ public class StickerController : MonoBehaviour
     [SerializeField] private Ease restoreEase = Ease.InOutSine;
 
     [Header("Travel VFX")]
-    [SerializeField] private GameObject travelTrailPrefab;
-    [SerializeField] private GameObject travelStarPrefab;
+    [SerializeField] private string travelTrailPoolId = "Sticker Travel Trail";
+    [SerializeField] private string travelStarPoolId = "Sticker Star Trail";
     [Tooltip("Sticker holder'a bu dünya mesafesi kadar yaklaştığında trail emission kapanır. 0 değeri holder'a kadar sürdürür.")]
     [SerializeField, Min(0f)] private float travelTrailStopDistance = 0.75f;
 
@@ -63,6 +63,8 @@ public class StickerController : MonoBehaviour
     private bool hasPlayedPeelThresholdSfx;
     private StickerTravelTrailVfx travelTrailVfx;
     private StickerStarTrailVfx travelStarVfx;
+    private Tween travelTrailReleaseTween;
+    private Tween travelStarReleaseTween;
 
     public StickerType StickerType => stickerType;
     public bool IsPlacing => isPlacing;
@@ -73,8 +75,6 @@ public class StickerController : MonoBehaviour
             peelController = GetComponent<StickerPeelController>();
 
         EnsureClickCollider();
-        EnsureTravelTrail();
-        EnsureTravelStarParticles();
         FindMatchingHolder();
     }
 
@@ -265,30 +265,40 @@ public class StickerController : MonoBehaviour
         clickCollider = boxCollider;
     }
 
-    private void EnsureTravelTrail()
+    private void AcquireTravelTrail()
     {
-        if (travelTrailVfx == null)
-            travelTrailVfx = GetComponentInChildren<StickerTravelTrailVfx>(true);
-
-        if (travelTrailVfx == null && travelTrailPrefab != null)
-        {
-            var trailObject = Instantiate(travelTrailPrefab, transform);
-            trailObject.name = "Sticker Travel Trail";
-            travelTrailVfx = trailObject.GetComponent<StickerTravelTrailVfx>();
-        }
-
-        if (travelTrailVfx == null)
+        if (travelTrailVfx != null || PoolManager.Instance == null ||
+            string.IsNullOrWhiteSpace(travelTrailPoolId))
             return;
 
+        travelTrailReleaseTween?.Kill();
+        travelTrailReleaseTween = null;
+
+        var trailObject = PoolManager.Instance.Spawn(
+            travelTrailPoolId,
+            transform.position,
+            transform.rotation,
+            transform);
+        if (trailObject == null)
+            return;
+
+        travelTrailVfx = trailObject.GetComponent<StickerTravelTrailVfx>();
+        if (travelTrailVfx == null)
+        {
+            PoolManager.Instance.Despawn(trailObject);
+            return;
+        }
+
+        travelTrailVfx.AttachTo(transform);
         var stickerRenderer = GetComponent<SpriteRenderer>();
         travelTrailVfx.ConfigureSorting(
             stickerRenderer.sortingLayerID,
             stickerRenderer.sortingOrder);
-        travelTrailVfx.Stop(true);
     }
 
     private void StartTravelTrail()
     {
+        AcquireTravelTrail();
         travelTrailVfx?.Play();
 
         StartTravelStarParticles();
@@ -296,41 +306,105 @@ public class StickerController : MonoBehaviour
 
     private void StopTravelTrail(bool clearImmediately)
     {
-        travelTrailVfx?.Stop(clearImmediately);
+        if (travelTrailVfx != null)
+        {
+            travelTrailVfx.Stop(clearImmediately);
+            if (clearImmediately)
+            {
+                ReleaseTravelTrail();
+            }
+            else if (travelTrailReleaseTween == null || !travelTrailReleaseTween.IsActive())
+            {
+                travelTrailReleaseTween = DOVirtual.DelayedCall(
+                    travelTrailVfx.ReleaseDelay,
+                    ReleaseTravelTrail);
+            }
+        }
 
         StopTravelStarParticles(clearImmediately);
     }
 
-    private void EnsureTravelStarParticles()
+    private void ReleaseTravelTrail()
     {
-        if (travelStarVfx == null)
-            travelStarVfx = GetComponentInChildren<StickerStarTrailVfx>(true);
+        travelTrailReleaseTween?.Kill();
+        travelTrailReleaseTween = null;
 
-        if (travelStarVfx == null && travelStarPrefab != null)
-        {
-            var starObject = Instantiate(travelStarPrefab, transform);
-            starObject.name = "Sticker Star Trail";
-            travelStarVfx = starObject.GetComponent<StickerStarTrailVfx>();
-        }
-
-        if (travelStarVfx == null)
+        if (travelTrailVfx == null)
             return;
 
+        var instance = travelTrailVfx.gameObject;
+        travelTrailVfx = null;
+        if (PoolManager.Instance != null)
+            PoolManager.Instance.Despawn(instance);
+    }
+
+    private void AcquireTravelStarParticles()
+    {
+        if (travelStarVfx != null || PoolManager.Instance == null ||
+            string.IsNullOrWhiteSpace(travelStarPoolId))
+            return;
+
+        travelStarReleaseTween?.Kill();
+        travelStarReleaseTween = null;
+
+        var starObject = PoolManager.Instance.Spawn(
+            travelStarPoolId,
+            transform.position,
+            transform.rotation,
+            transform);
+        if (starObject == null)
+            return;
+
+        travelStarVfx = starObject.GetComponent<StickerStarTrailVfx>();
+        if (travelStarVfx == null)
+        {
+            PoolManager.Instance.Despawn(starObject);
+            return;
+        }
+
+        travelStarVfx.AttachTo(transform);
         var stickerRenderer = GetComponent<SpriteRenderer>();
         travelStarVfx.ConfigureSorting(
             stickerRenderer.sortingLayerID,
             stickerRenderer.sortingOrder);
-        travelStarVfx.Stop(true);
     }
 
     private void StartTravelStarParticles()
     {
+        AcquireTravelStarParticles();
         travelStarVfx?.Play();
     }
 
     private void StopTravelStarParticles(bool clearImmediately)
     {
-        travelStarVfx?.Stop(clearImmediately);
+        if (travelStarVfx == null)
+            return;
+
+        travelStarVfx.Stop(clearImmediately);
+        if (clearImmediately)
+        {
+            ReleaseTravelStarParticles();
+        }
+        else if (travelStarReleaseTween == null || !travelStarReleaseTween.IsActive())
+        {
+            travelStarReleaseTween = DOVirtual.DelayedCall(
+                travelStarVfx.ReleaseDelay,
+                ReleaseTravelStarParticles);
+        }
+    }
+
+    private void ReleaseTravelStarParticles()
+    {
+        travelStarReleaseTween?.Kill();
+        travelStarReleaseTween = null;
+
+        if (travelStarVfx == null)
+            return;
+
+        var instance = travelStarVfx.gameObject;
+        travelStarVfx = null;
+        if (PoolManager.Instance != null)
+            PoolManager.Instance.Despawn(instance);
     }
 
     private void StopTravelTrailWhenCloseToHolder()
@@ -387,5 +461,6 @@ public enum StickerType
 {
     Hayvan,
     Meyve,
-    Arac
+    Arac,
+    Doga
 }

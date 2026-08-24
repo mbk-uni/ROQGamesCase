@@ -24,6 +24,14 @@ public class StickerTravelTrailVfx : MonoBehaviour
     [SerializeField, Min(1)] private int sortingOrderOffset = 1;
 
     public TrailRenderer Renderer => trailRenderer;
+    public float ReleaseDelay
+    {
+        get
+        {
+            EnsureRenderer();
+            return trailRenderer != null ? Mathf.Max(0.01f, trailRenderer.time) : 0.01f;
+        }
+    }
 
     private void Awake()
     {
@@ -44,6 +52,13 @@ public class StickerTravelTrailVfx : MonoBehaviour
 
         trailRenderer.sortingLayerID = sortingLayerId;
         trailRenderer.sortingOrder = stickerSortingOrder - Mathf.Max(1, sortingOrderOffset);
+    }
+
+    public void AttachTo(Transform owner)
+    {
+        transform.SetParent(owner, false);
+        transform.localPosition = localOffset;
+        transform.localRotation = Quaternion.identity;
     }
 
     public void Play()

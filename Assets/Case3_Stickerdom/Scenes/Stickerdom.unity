@@ -862,6 +862,7 @@ GameObject:
   m_Component:
   - component: {fileID: 636427986}
   - component: {fileID: 636427987}
+  - component: {fileID: 636427988}
   m_Layer: 0
   m_Name: Ghost_Arac
   m_TagString: Untagged
@@ -943,6 +944,19 @@ SpriteRenderer:
   m_SpriteTileMode: 0
   m_WasSpriteAssigned: 1
   m_SpriteSortPoint: 0
+--- !u!114 &636427988
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 636427985}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 77faaa2763e6249e9a180333b7daa3fc, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::StickerHolder
+  stickerType: 2
 --- !u!1 &740737549
 GameObject:
   m_ObjectHideFlags: 0
@@ -1228,9 +1242,12 @@ MonoBehaviour:
   - id: AttachBurst
     prefab: {fileID: 7548656658955928381, guid: 2f77878140559486c8a60be3fd513359, type: 3}
     initialSize: 100
-  - id: StickerStarBurst
-    prefab: {fileID: 2703089448029283905, guid: 701ee89ecf7b8416fa1d48b015cc0c63, type: 3}
-    initialSize: 8
+  - id: Sticker Star Trail
+    prefab: {fileID: 797396614967298007, guid: a31f4c7e9d0248fda725ecf844d61002, type: 3}
+    initialSize: 100
+  - id: Sticker Travel Trail
+    prefab: {fileID: 61001001, guid: a31f4c7e9d0248fda725ecf844d61001, type: 3}
+    initialSize: 100
 --- !u!4 &945672208
 Transform:
   m_ObjectHideFlags: 0
@@ -1347,6 +1364,9 @@ GameObject:
   m_Component:
   - component: {fileID: 1215549563}
   - component: {fileID: 1215549564}
+  - component: {fileID: 1215549566}
+  - component: {fileID: 1215549565}
+  - component: {fileID: 1215549567}
   m_Layer: 0
   m_Name: Sticker_Arac
   m_TagString: Untagged
@@ -1364,7 +1384,7 @@ Transform:
   serializedVersion: 2
   m_LocalRotation: {x: 0, y: 0, z: 0.034899496, w: 0.99939084}
   m_LocalPosition: {x: 4.85, y: -5, z: 0}
-  m_LocalScale: {x: 0.45, y: 0.44999996, z: 0.60685706}
+  m_LocalScale: {x: 1.4, y: 1.4, z: 1.8879998}
   m_ConstrainProportionsScale: 1
   m_Children: []
   m_Father: {fileID: 2005150150}
@@ -1395,7 +1415,7 @@ SpriteRenderer:
   m_RenderingLayerMask: 1
   m_RendererPriority: 0
   m_Materials:
-  - {fileID: 2100000, guid: 9dfc825aed78fcd4ba02077103263b40, type: 2}
+  - {fileID: 2100000, guid: cb53665dc03484b3ebdf55ce8330f4c9, type: 2}
   m_StaticBatchInfo:
     firstSubMesh: 0
     subMeshCount: 0
@@ -1428,6 +1448,136 @@ SpriteRenderer:
   m_SpriteTileMode: 0
   m_WasSpriteAssigned: 1
   m_SpriteSortPoint: 0
+--- !u!114 &1215549565
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1215549562}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 3224766b189a5408bb8ac076f90fd7c1, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::StickerPeelController
+  corner: 1
+  progress: 0
+  angleOffsetDegrees: 0
+  travel: 1.6
+  playOnEnable: 0
+  duration: 0.65
+  easing:
+    serializedVersion: 2
+    m_Curve:
+    - serializedVersion: 3
+      time: 0
+      value: 0
+      inSlope: 0
+      outSlope: 0
+      tangentMode: 0
+      weightedMode: 0
+      inWeight: 0
+      outWeight: 0
+    - serializedVersion: 3
+      time: 1
+      value: 1
+      inSlope: 0
+      outSlope: 0
+      tangentMode: 0
+      weightedMode: 0
+      inWeight: 0
+      outWeight: 0
+    m_PreInfinity: 2
+    m_PostInfinity: 2
+    m_RotationOrder: 4
+--- !u!114 &1215549566
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1215549562}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: beabb209431e94930862c206eb897872, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::StickerController
+  stickerType: 2
+  interactionCamera: {fileID: 339643458}
+  clickLayers:
+    serializedVersion: 2
+    m_Bits: 4294967295
+  peelController: {fileID: 1215549565}
+  peeledProgress: 0.62
+  peelDuration: 0.7
+  peelEase: 4
+  moveStartOverlap: 0.12
+  moveDuration: 0.75
+  moveEase: 4
+  restoreDuration: 0.65
+  restoreEase: 4
+  travelTrailPoolId: Sticker Travel Trail
+  travelStarPoolId: Sticker Star Trail
+  travelTrailStopDistance: 0.75
+  arrivalScaleMultiplier: 1.12
+  arrivalScaleStartOverlap: 0.25
+  arrivalScaleUpDuration: 0.12
+  arrivalScaleUpEase: 27
+  arrivalScaleReturnDuration: 0.14
+  arrivalScaleReturnEase: 4
+  arrivalVfxPoolId: AttachBurst
+  peelThresholdSfxId: StickerdomSFX_1
+  peelSfxProgressThreshold: 0.2
+  peelSfxVolume: 1
+  placementCompleteSfxId: StickerdomSFX_2
+  placementCompleteSfxStartOverlap: 0.2
+  placementCompleteSfxVolume: 1
+--- !u!61 &1215549567
+BoxCollider2D:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1215549562}
+  m_Enabled: 1
+  serializedVersion: 3
+  m_Density: 1
+  m_Material: {fileID: 0}
+  m_IncludeLayers:
+    serializedVersion: 2
+    m_Bits: 0
+  m_ExcludeLayers:
+    serializedVersion: 2
+    m_Bits: 0
+  m_LayerOverridePriority: 0
+  m_ForceSendLayers:
+    serializedVersion: 2
+    m_Bits: 4294967295
+  m_ForceReceiveLayers:
+    serializedVersion: 2
+    m_Bits: 4294967295
+  m_ContactCaptureLayers:
+    serializedVersion: 2
+    m_Bits: 4294967295
+  m_CallbackLayers:
+    serializedVersion: 2
+    m_Bits: 4294967295
+  m_IsTrigger: 0
+  m_UsedByEffector: 0
+  m_CompositeOperation: 0
+  m_CompositeOrder: 0
+  m_Offset: {x: 0, y: 0}
+  m_SpriteTilingProperty:
+    border: {x: 0, y: 0, z: 0, w: 0}
+    pivot: {x: 0.5, y: 0.5}
+    oldSize: {x: 10.8, y: 10.8}
+    newSize: {x: 4.72, y: 3.13}
+    adaptiveTilingThreshold: 0.5
+    drawMode: 0
+    adaptiveTiling: 0
+  m_AutoTiling: 0
+  m_Size: {x: 3, y: 2}
+  m_EdgeRadius: 0
 --- !u!1 &1306484379
 GameObject:
   m_ObjectHideFlags: 0
@@ -1585,6 +1735,7 @@ GameObject:
   - component: {fileID: 1644672742}
   - component: {fileID: 1644672744}
   - component: {fileID: 1644672743}
+  - component: {fileID: 1644672745}
   m_Layer: 0
   m_Name: Sticker_Meyve
   m_TagString: Untagged
@@ -1734,8 +1885,8 @@ MonoBehaviour:
   moveEase: 4
   restoreDuration: 0.65
   restoreEase: 4
-  travelTrailPrefab: {fileID: 61001001, guid: a31f4c7e9d0248fda725ecf844d61001, type: 3}
-  travelStarPrefab: {fileID: 797396614967298007, guid: a31f4c7e9d0248fda725ecf844d61002, type: 3}
+  travelTrailPoolId: Sticker Travel Trail
+  travelStarPoolId: Sticker Star Trail
   travelTrailStopDistance: 0.75
   arrivalScaleMultiplier: 1.12
   arrivalScaleStartOverlap: 0.25
@@ -1750,6 +1901,52 @@ MonoBehaviour:
   placementCompleteSfxId: StickerdomSFX_2
   placementCompleteSfxStartOverlap: 0.2
   placementCompleteSfxVolume: 1
+--- !u!61 &1644672745
+BoxCollider2D:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1644672740}
+  m_Enabled: 1
+  serializedVersion: 3
+  m_Density: 1
+  m_Material: {fileID: 0}
+  m_IncludeLayers:
+    serializedVersion: 2
+    m_Bits: 0
+  m_ExcludeLayers:
+    serializedVersion: 2
+    m_Bits: 0
+  m_LayerOverridePriority: 0
+  m_ForceSendLayers:
+    serializedVersion: 2
+    m_Bits: 4294967295
+  m_ForceReceiveLayers:
+    serializedVersion: 2
+    m_Bits: 4294967295
+  m_ContactCaptureLayers:
+    serializedVersion: 2
+    m_Bits: 4294967295
+  m_CallbackLayers:
+    serializedVersion: 2
+    m_Bits: 4294967295
+  m_IsTrigger: 0
+  m_UsedByEffector: 0
+  m_CompositeOperation: 0
+  m_CompositeOrder: 0
+  m_Offset: {x: 0, y: 0}
+  m_SpriteTilingProperty:
+    border: {x: 0, y: 0, z: 0, w: 0}
+    pivot: {x: 0.5, y: 0.5}
+    oldSize: {x: 10.8, y: 10.8}
+    newSize: {x: 3.5, y: 4.02}
+    adaptiveTilingThreshold: 0.5
+    drawMode: 0
+    adaptiveTiling: 0
+  m_AutoTiling: 0
+  m_Size: {x: 2.5, y: 3}
+  m_EdgeRadius: 0
 --- !u!1 &1856208314
 GameObject:
   m_ObjectHideFlags: 0
@@ -1795,6 +1992,9 @@ GameObject:
   m_Component:
   - component: {fileID: 1976309941}
   - component: {fileID: 1976309942}
+  - component: {fileID: 1976309944}
+  - component: {fileID: 1976309943}
+  - component: {fileID: 1976309945}
   m_Layer: 0
   m_Name: Sticker_Doga
   m_TagString: Untagged
@@ -1812,7 +2012,7 @@ Transform:
   serializedVersion: 2
   m_LocalRotation: {x: 0, y: 0, z: 0.034899496, w: 0.99939084}
   m_LocalPosition: {x: 4.44, y: -10.21, z: 0}
-  m_LocalScale: {x: 0.45, y: 0.44999996, z: 0.60685706}
+  m_LocalScale: {x: 1.4, y: 1.4, z: 1.8879998}
   m_ConstrainProportionsScale: 1
   m_Children: []
   m_Father: {fileID: 2005150150}
@@ -1843,7 +2043,7 @@ SpriteRenderer:
   m_RenderingLayerMask: 1
   m_RendererPriority: 0
   m_Materials:
-  - {fileID: 2100000, guid: 9dfc825aed78fcd4ba02077103263b40, type: 2}
+  - {fileID: 2100000, guid: cb53665dc03484b3ebdf55ce8330f4c9, type: 2}
   m_StaticBatchInfo:
     firstSubMesh: 0
     subMeshCount: 0
@@ -1876,6 +2076,136 @@ SpriteRenderer:
   m_SpriteTileMode: 0
   m_WasSpriteAssigned: 1
   m_SpriteSortPoint: 0
+--- !u!114 &1976309943
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1976309940}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 3224766b189a5408bb8ac076f90fd7c1, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::StickerPeelController
+  corner: 1
+  progress: 0
+  angleOffsetDegrees: 0
+  travel: 1.6
+  playOnEnable: 0
+  duration: 0.65
+  easing:
+    serializedVersion: 2
+    m_Curve:
+    - serializedVersion: 3
+      time: 0
+      value: 0
+      inSlope: 0
+      outSlope: 0
+      tangentMode: 0
+      weightedMode: 0
+      inWeight: 0
+      outWeight: 0
+    - serializedVersion: 3
+      time: 1
+      value: 1
+      inSlope: 0
+      outSlope: 0
+      tangentMode: 0
+      weightedMode: 0
+      inWeight: 0
+      outWeight: 0
+    m_PreInfinity: 2
+    m_PostInfinity: 2
+    m_RotationOrder: 4
+--- !u!114 &1976309944
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1976309940}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: beabb209431e94930862c206eb897872, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::StickerController
+  stickerType: 3
+  interactionCamera: {fileID: 0}
+  clickLayers:
+    serializedVersion: 2
+    m_Bits: 4294967295
+  peelController: {fileID: 1976309943}
+  peeledProgress: 0.69
+  peelDuration: 0.55
+  peelEase: 4
+  moveStartOverlap: 0.06
+  moveDuration: 0.75
+  moveEase: 4
+  restoreDuration: 0.45
+  restoreEase: 4
+  travelTrailPoolId: Sticker Travel Trail
+  travelStarPoolId: Sticker Star Trail
+  travelTrailStopDistance: 0.75
+  arrivalScaleMultiplier: 1.12
+  arrivalScaleStartOverlap: 0.12
+  arrivalScaleUpDuration: 0.12
+  arrivalScaleUpEase: 27
+  arrivalScaleReturnDuration: 0.14
+  arrivalScaleReturnEase: 4
+  arrivalVfxPoolId: AttachBurst
+  peelThresholdSfxId: StickerdomSFX_1
+  peelSfxProgressThreshold: 0.5
+  peelSfxVolume: 1
+  placementCompleteSfxId: StickerdomSFX_2
+  placementCompleteSfxStartOverlap: 0.12
+  placementCompleteSfxVolume: 1
+--- !u!61 &1976309945
+BoxCollider2D:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1976309940}
+  m_Enabled: 1
+  serializedVersion: 3
+  m_Density: 1
+  m_Material: {fileID: 0}
+  m_IncludeLayers:
+    serializedVersion: 2
+    m_Bits: 0
+  m_ExcludeLayers:
+    serializedVersion: 2
+    m_Bits: 0
+  m_LayerOverridePriority: 0
+  m_ForceSendLayers:
+    serializedVersion: 2
+    m_Bits: 4294967295
+  m_ForceReceiveLayers:
+    serializedVersion: 2
+    m_Bits: 4294967295
+  m_ContactCaptureLayers:
+    serializedVersion: 2
+    m_Bits: 4294967295
+  m_CallbackLayers:
+    serializedVersion: 2
+    m_Bits: 4294967295
+  m_IsTrigger: 0
+  m_UsedByEffector: 0
+  m_CompositeOperation: 0
+  m_CompositeOrder: 0
+  m_Offset: {x: 0, y: 0}
+  m_SpriteTilingProperty:
+    border: {x: 0, y: 0, z: 0, w: 0}
+    pivot: {x: 0.5, y: 0.5}
+    oldSize: {x: 10.8, y: 10.8}
+    newSize: {x: 4.72, y: 3.13}
+    adaptiveTilingThreshold: 0.5
+    drawMode: 0
+    adaptiveTiling: 0
+  m_AutoTiling: 0
+  m_Size: {x: 2.5, y: 3}
+  m_EdgeRadius: 0
 --- !u!1 &2005150149
 GameObject:
   m_ObjectHideFlags: 0
@@ -1921,6 +2251,7 @@ GameObject:
   m_Component:
   - component: {fileID: 2055223284}
   - component: {fileID: 2055223285}
+  - component: {fileID: 2055223286}
   m_Layer: 0
   m_Name: Ghost_Doga
   m_TagString: Untagged
@@ -2002,6 +2333,19 @@ SpriteRenderer:
   m_SpriteTileMode: 0
   m_WasSpriteAssigned: 1
   m_SpriteSortPoint: 0
+--- !u!114 &2055223286
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 2055223283}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 77faaa2763e6249e9a180333b7daa3fc, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::StickerHolder
+  stickerType: 3
 --- !u!1 &2059011742
 GameObject:
   m_ObjectHideFlags: 0
@@ -2013,6 +2357,8 @@ GameObject:
   - component: {fileID: 2059011743}
   - component: {fileID: 2059011744}
   - component: {fileID: 2059011745}
+  - component: {fileID: 2059011746}
+  - component: {fileID: 2059011747}
   m_Layer: 0
   m_Name: Sticker_Hayvan
   m_TagString: Untagged
@@ -2030,7 +2376,7 @@ Transform:
   serializedVersion: 2
   m_LocalRotation: {x: -0, y: -0, z: 0.0059969807, w: 0.99998206}
   m_LocalPosition: {x: -2.97, y: -10.11, z: 0}
-  m_LocalScale: {x: 0.42, y: 0.42, z: 0.42}
+  m_LocalScale: {x: 1.3, y: 1.3, z: 1.3}
   m_ConstrainProportionsScale: 1
   m_Children: []
   m_Father: {fileID: 2005150150}
@@ -2061,7 +2407,7 @@ SpriteRenderer:
   m_RenderingLayerMask: 1
   m_RendererPriority: 0
   m_Materials:
-  - {fileID: 2100000, guid: 9dfc825aed78fcd4ba02077103263b40, type: 2}
+  - {fileID: 2100000, guid: cb53665dc03484b3ebdf55ce8330f4c9, type: 2}
   m_StaticBatchInfo:
     firstSubMesh: 0
     subMeshCount: 0
@@ -2107,35 +2453,123 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::StickerController
   stickerType: 0
-  interactionCamera: {fileID: 0}
+  interactionCamera: {fileID: 339643458}
   clickLayers:
     serializedVersion: 2
     m_Bits: 4294967295
-  peelController: {fileID: 0}
-  peeledProgress: 0.668
-  peelDuration: 0.55
+  peelController: {fileID: 2059011746}
+  peeledProgress: 0.736
+  peelDuration: 0.7
   peelEase: 4
-  moveStartOverlap: 0.06
+  moveStartOverlap: 0.12
   moveDuration: 0.75
   moveEase: 4
-  restoreDuration: 0.45
+  restoreDuration: 0.65
   restoreEase: 4
-  travelTrailPrefab: {fileID: 0}
-  travelStarPrefab: {fileID: 0}
+  travelTrailPoolId: Sticker Travel Trail
+  travelStarPoolId: Sticker Star Trail
   travelTrailStopDistance: 0.75
   arrivalScaleMultiplier: 1.12
-  arrivalScaleStartOverlap: 0.12
+  arrivalScaleStartOverlap: 0.25
   arrivalScaleUpDuration: 0.12
   arrivalScaleUpEase: 27
   arrivalScaleReturnDuration: 0.14
   arrivalScaleReturnEase: 4
   arrivalVfxPoolId: AttachBurst
   peelThresholdSfxId: StickerdomSFX_1
-  peelSfxProgressThreshold: 0.5
+  peelSfxProgressThreshold: 0.2
   peelSfxVolume: 1
   placementCompleteSfxId: StickerdomSFX_2
-  placementCompleteSfxStartOverlap: 0.12
+  placementCompleteSfxStartOverlap: 0.2
   placementCompleteSfxVolume: 1
+--- !u!114 &2059011746
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 2059011742}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 3224766b189a5408bb8ac076f90fd7c1, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::StickerPeelController
+  corner: 1
+  progress: 0
+  angleOffsetDegrees: 0
+  travel: 1.6
+  playOnEnable: 0
+  duration: 0.65
+  easing:
+    serializedVersion: 2
+    m_Curve:
+    - serializedVersion: 3
+      time: 0
+      value: 0
+      inSlope: 0
+      outSlope: 0
+      tangentMode: 0
+      weightedMode: 0
+      inWeight: 0
+      outWeight: 0
+    - serializedVersion: 3
+      time: 1
+      value: 1
+      inSlope: 0
+      outSlope: 0
+      tangentMode: 0
+      weightedMode: 0
+      inWeight: 0
+      outWeight: 0
+    m_PreInfinity: 2
+    m_PostInfinity: 2
+    m_RotationOrder: 4
+--- !u!61 &2059011747
+BoxCollider2D:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 2059011742}
+  m_Enabled: 1
+  serializedVersion: 3
+  m_Density: 1
+  m_Material: {fileID: 0}
+  m_IncludeLayers:
+    serializedVersion: 2
+    m_Bits: 0
+  m_ExcludeLayers:
+    serializedVersion: 2
+    m_Bits: 0
+  m_LayerOverridePriority: 0
+  m_ForceSendLayers:
+    serializedVersion: 2
+    m_Bits: 4294967295
+  m_ForceReceiveLayers:
+    serializedVersion: 2
+    m_Bits: 4294967295
+  m_ContactCaptureLayers:
+    serializedVersion: 2
+    m_Bits: 4294967295
+  m_CallbackLayers:
+    serializedVersion: 2
+    m_Bits: 4294967295
+  m_IsTrigger: 0
+  m_UsedByEffector: 0
+  m_CompositeOperation: 0
+  m_CompositeOrder: 0
+  m_Offset: {x: 0, y: 0}
+  m_SpriteTilingProperty:
+    border: {x: 0, y: 0, z: 0, w: 0}
+    pivot: {x: 0.5, y: 0.5}
+    oldSize: {x: 10.8, y: 10.8}
+    newSize: {x: 3.56, y: 4.37}
+    adaptiveTilingThreshold: 0.5
+    drawMode: 0
+    adaptiveTiling: 0
+  m_AutoTiling: 0
+  m_Size: {x: 2.5, y: 3}
+  m_EdgeRadius: 0
 --- !u!1660057539 &9223372036854775807
 SceneRoots:
   m_ObjectHideFlags: 0
