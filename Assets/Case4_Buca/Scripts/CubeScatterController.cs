@@ -1,5 +1,6 @@
 using System.Collections;
 using System.Collections.Generic;
+using DG.Tweening;
 using UnityEngine;
 
 [DisallowMultipleComponent]
@@ -54,14 +55,31 @@ public class CubeScatterController : MonoBehaviour
     [SerializeField, Min(0.01f)] private float colorTransitionDuration = 0.75f;
     [SerializeField] private AnimationCurve colorTransitionEase = AnimationCurve.EaseInOut(0f, 0f, 1f, 1f);
 
+    [Header("Completion VFX")]
+    [SerializeField] private string completionVfxPoolId = "FX_MagicBlast_02";
+    [Tooltip("Küplerin durmuş sayılması için izin verilen maksimum doğrusal hız.")]
+    [SerializeField, Min(0f)] private float stoppedLinearSpeed = 0.12f;
+    [Tooltip("Küplerin durmuş sayılması için izin verilen maksimum açısal hız.")]
+    [SerializeField, Min(0f)] private float stoppedAngularSpeed = 0.35f;
+    [Tooltip("Bütün küplerin hız eşiklerinin altında kesintisiz kalması gereken süre.")]
+    [SerializeField, Min(0f)] private float allStoppedHoldDuration = 0.35f;
+    [Tooltip("Durma algılanamazsa, disc çarpışmasından bu kadar saniye sonra VFX zorunlu oynatılır.")]
+    [SerializeField, Min(0.01f)] private float completionVfxFallbackDelay = 10f;
+    [Tooltip("VFX oynadıktan sonra scale-down animasyonunun başlamasına kadar beklenecek süre.")]
+    [SerializeField, Min(0f)] private float scaleDownStartDelay = 0.3f;
+    [SerializeField, Min(0.01f)] private float scaleDownDuration = 0.3f;
+
     private readonly List<Rigidbody> cubeBodies = new();
     private readonly Dictionary<Rigidbody, Renderer[]> renderersByBody = new();
     private readonly Dictionary<Rigidbody, Coroutine> colorAnimations = new();
     private MaterialPropertyBlock colorProperties;
     private bool hasTriggered;
     private bool isScattering;
+    private bool completionVfxPlayed;
     private Vector3 slowdownCenter;
     private float scatterStartedTime;
+    private float allStoppedElapsed;
+    private Sequence completionSequence;
 
     private static readonly int BaseColorId = Shader.PropertyToID("_BaseColor");
     private static readonly int ColorId = Shader.PropertyToID("_Color");
@@ -110,7 +128,7 @@ public class CubeScatterController : MonoBehaviour
         var maximumSpeedSqr = maximumCubeSpeed * maximumCubeSpeed;
         foreach (var body in cubeBodies)
         {
-            if (body == null)
+            if (body == null || !body.gameObject.activeInHierarchy || body.isKinematic)
                 continue;
 
             if (slowdownIsActive)
@@ -119,6 +137,8 @@ public class CubeScatterController : MonoBehaviour
             if (body.linearVelocity.sqrMagnitude > maximumSpeedSqr)
                 body.linearVelocity = body.linearVelocity.normalized * maximumCubeSpeed;
         }
+
+        UpdateCompletionVfxState();
     }
 
     public bool TryScatter(Vector3 impactPoint, Vector3 discVelocity)
@@ -136,6 +156,8 @@ public class CubeScatterController : MonoBehaviour
         scatterStartedTime = Time.time;
         hasTriggered = true;
         isScattering = true;
+        completionVfxPlayed = false;
+        allStoppedElapsed = 0f;
         StartCoroutine(ScatterRoutine(impactPoint, discVelocity));
         return true;
     }
@@ -252,6 +274,9 @@ public class CubeScatterController : MonoBehaviour
 
     private void ApplyProgressiveSlowdown(Rigidbody body)
     {
+        if (body == null || body.isKinematic)
+            return;
+
         var offsetFromCenter = body.worldCenterOfMass - slowdownCenter;
         offsetFromCenter.y = 0f;
         var distanceFromCenter = offsetFromCenter.magnitude;
@@ -363,6 +388,126 @@ public class CubeScatterController : MonoBehaviour
         }
     }
 
+    private void UpdateCompletionVfxState()
+    {
+        if (completionVfxPlayed)
+            return;
+
+        if (Time.time >= scatterStartedTime + completionVfxFallbackDelay)
+        {
+            completionVfxPlayed = true;
+            PlayCompletionVfx();
+            return;
+        }
+
+        if (isScattering || !AreAllCubesStopped())
+        {
+            allStoppedElapsed = 0f;
+            return;
+        }
+
+        allStoppedElapsed += Time.fixedDeltaTime;
+        if (allStoppedElapsed < allStoppedHoldDuration)
+            return;
+
+        completionVfxPlayed = true;
+        PlayCompletionVfx();
+    }
+
+    private bool AreAllCubesStopped()
+    {
+        var linearSpeedSqr = stoppedLinearSpeed * stoppedLinearSpeed;
+        var angularSpeedSqr = stoppedAngularSpeed * stoppedAngularSpeed;
+        var foundActiveCube = false;
+
+        foreach (var body in cubeBodies)
+        {
+            if (body == null || !body.gameObject.activeInHierarchy)
+                continue;
+
+            foundActiveCube = true;
+            if (body.IsSleeping())
+                continue;
+
+            if (body.linearVelocity.sqrMagnitude > linearSpeedSqr ||
+                body.angularVelocity.sqrMagnitude > angularSpeedSqr)
+                return false;
+        }
+
+        return foundActiveCube;
+    }
+
+    private void PlayCompletionVfx()
+    {
+        foreach (var body in cubeBodies)
+        {
+            if (body == null || !body.gameObject.activeInHierarchy)
+                continue;
+
+            if (PoolManager.Instance != null && !string.IsNullOrWhiteSpace(completionVfxPoolId))
+            {
+                var cubePosition = body.position;
+                var vfxPosition = new Vector3(cubePosition.x, 0f, cubePosition.z);
+                PoolManager.Instance.PlayVfx(completionVfxPoolId, vfxPosition, Quaternion.identity);
+            }
+        }
+
+        StartCubeScaleDown();
+    }
+
+    private void StartCubeScaleDown()
+    {
+        completionSequence?.Kill();
+        completionSequence = DOTween.Sequence();
+        completionSequence.InsertCallback(scaleDownStartDelay, FreezeCubeBodies);
+
+        foreach (var body in cubeBodies)
+        {
+            if (body == null || !body.gameObject.activeInHierarchy)
+                continue;
+
+            body.transform.DOKill();
+            completionSequence.Insert(
+                scaleDownStartDelay,
+                body.transform
+                    .DOScale(Vector3.zero, scaleDownDuration)
+                    .SetEase(Ease.InBack));
+        }
+
+        completionSequence.OnComplete(HideAllCubes);
+    }
+
+    private void FreezeCubeBodies()
+    {
+        foreach (var body in cubeBodies)
+        {
+            if (body == null || !body.gameObject.activeInHierarchy)
+                continue;
+
+            body.linearVelocity = Vector3.zero;
+            body.angularVelocity = Vector3.zero;
+            body.useGravity = false;
+            body.detectCollisions = false;
+            body.isKinematic = true;
+        }
+    }
+
+    private void HideAllCubes()
+    {
+        completionSequence = null;
+        foreach (var body in cubeBodies)
+        {
+            if (body != null)
+                body.gameObject.SetActive(false);
+        }
+    }
+
+    private void OnDisable()
+    {
+        completionSequence?.Kill();
+        completionSequence = null;
+    }
+
     private void OnValidate()
     {
         cubeMass = Mathf.Max(0.001f, cubeMass);
@@ -375,6 +520,12 @@ public class CubeScatterController : MonoBehaviour
         hardLimitRadius = Mathf.Max(slowdownFullStrengthRadius + 0.01f, hardLimitRadius);
         colorTransitionStartDelay = Mathf.Max(0f, colorTransitionStartDelay);
         colorTransitionDuration = Mathf.Max(0.01f, colorTransitionDuration);
+        stoppedLinearSpeed = Mathf.Max(0f, stoppedLinearSpeed);
+        stoppedAngularSpeed = Mathf.Max(0f, stoppedAngularSpeed);
+        allStoppedHoldDuration = Mathf.Max(0f, allStoppedHoldDuration);
+        completionVfxFallbackDelay = Mathf.Max(0.01f, completionVfxFallbackDelay);
+        scaleDownStartDelay = Mathf.Max(0f, scaleDownStartDelay);
+        scaleDownDuration = Mathf.Max(0.01f, scaleDownDuration);
     }
 
     private static Gradient CreateDefaultImpactGradient()
