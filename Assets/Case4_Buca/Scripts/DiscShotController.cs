@@ -1,3 +1,5 @@
+using System.Collections;
+using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.InputSystem;
 using UnityEngine.Rendering;
@@ -41,6 +43,18 @@ public class DiscShotController : MonoBehaviour
     [Tooltip("Zeminle çakışmayı engelleyen dünya Y ofseti.")]
     [SerializeField] private float indicatorHeightOffset = 0.08f;
 
+    [Header("Audio")]
+    [SerializeField] private string launchSfxId = "WooshSFX";
+    [SerializeField, Range(0f, 1f)] private float launchSfxVolume = 1f;
+
+    [Header("Movement Trails")]
+    [SerializeField] private string travelTrailPoolId = "Sticker Travel Trail";
+    [SerializeField] private string starTrailPoolId = "Sticker Star Trail";
+    [Tooltip("Efektlerin disc merkezinin hareket yönüne göre ne kadar gerisinde kalacağı.")]
+    [SerializeField, Min(0f)] private float trailBackOffset = 0.35f;
+    [Tooltip("Efektlerin zeminin üzerinde kalmasını sağlayan dünya Y ofseti.")]
+    [SerializeField] private float trailHeightOffset = 0.12f;
+
     private static readonly int BaseColorId = Shader.PropertyToID("_BaseColor");
     private static readonly int ColorId = Shader.PropertyToID("_Color");
 
@@ -57,6 +71,10 @@ public class DiscShotController : MonoBehaviour
     private Vector3 aimDirection;
     private float pullDistance;
     private Vector3 lastPlanarVelocity;
+    private Vector3 lastTrailDirection = Vector3.forward;
+    private StickerTravelTrailVfx activeTravelTrail;
+    private StickerStarTrailVfx activeStarTrail;
+    private readonly List<GameObject> trailsAwaitingRelease = new();
 
     public bool IsAiming => isAiming;
     public float Power01 => maxPullDistance > 0f ? Mathf.Clamp01(pullDistance / maxPullDistance) : 0f;
@@ -114,6 +132,7 @@ public class DiscShotController : MonoBehaviour
 
             discRigidbody.angularVelocity = Vector3.zero;
             lastPlanarVelocity = Vector3.zero;
+            StopMovementTrails(false);
             return;
         }
 
@@ -124,6 +143,11 @@ public class DiscShotController : MonoBehaviour
 
         discRigidbody.linearVelocity = slowedVelocity;
         lastPlanarVelocity = slowedVelocity;
+    }
+
+    private void LateUpdate()
+    {
+        UpdateMovementTrailPositions();
     }
 
     private void OnCollisionEnter(Collision collision)
@@ -179,6 +203,7 @@ public class DiscShotController : MonoBehaviour
         isAiming = false;
         pullDistance = 0f;
         SetIndicatorVisible(false);
+        ReleaseAllMovementTrails();
     }
 
     private void OnDestroy()
@@ -234,6 +259,7 @@ public class DiscShotController : MonoBehaviour
         aimDirection = Vector3.zero;
         discRigidbody.linearVelocity = Vector3.zero;
         discRigidbody.angularVelocity = Vector3.zero;
+        StopMovementTrails(false);
         UpdateAim(screenPosition);
     }
 
@@ -278,7 +304,144 @@ public class DiscShotController : MonoBehaviour
         discRigidbody.angularVelocity = Vector3.zero;
         discRigidbody.WakeUp();
         lastPlanarVelocity = launchVelocity;
+        StartMovementTrails(aimDirection);
+
+        if (AudioManager.Instance != null && !string.IsNullOrWhiteSpace(launchSfxId))
+            AudioManager.Instance.PlaySfx(launchSfxId, launchSfxVolume);
+
         pullDistance = 0f;
+    }
+
+    private void StartMovementTrails(Vector3 movementDirection)
+    {
+        StopMovementTrails(false);
+
+        movementDirection.y = 0f;
+        if (movementDirection.sqrMagnitude > 0.0001f)
+            lastTrailDirection = movementDirection.normalized;
+
+        if (PoolManager.Instance == null)
+            return;
+
+        var spawnPosition = GetMovementTrailPosition();
+
+        if (!string.IsNullOrWhiteSpace(travelTrailPoolId))
+        {
+            var travelObject = PoolManager.Instance.Spawn(
+                travelTrailPoolId,
+                spawnPosition,
+                Quaternion.identity);
+
+            if (travelObject != null)
+            {
+                activeTravelTrail = travelObject.GetComponent<StickerTravelTrailVfx>();
+                if (activeTravelTrail != null)
+                    activeTravelTrail.Play();
+                else
+                    PoolManager.Instance.Despawn(travelObject);
+            }
+        }
+
+        if (!string.IsNullOrWhiteSpace(starTrailPoolId))
+        {
+            var starObject = PoolManager.Instance.Spawn(
+                starTrailPoolId,
+                spawnPosition,
+                Quaternion.identity);
+
+            if (starObject != null)
+            {
+                activeStarTrail = starObject.GetComponent<StickerStarTrailVfx>();
+                if (activeStarTrail != null)
+                    activeStarTrail.Play();
+                else
+                    PoolManager.Instance.Despawn(starObject);
+            }
+        }
+    }
+
+    private void UpdateMovementTrailPositions()
+    {
+        if (activeTravelTrail == null && activeStarTrail == null)
+            return;
+
+        var planarVelocity = GetPlanarVelocity();
+        if (planarVelocity.sqrMagnitude > 0.0001f)
+            lastTrailDirection = planarVelocity.normalized;
+
+        var trailPosition = GetMovementTrailPosition();
+        if (activeTravelTrail != null)
+            activeTravelTrail.transform.position = trailPosition;
+
+        if (activeStarTrail != null)
+            activeStarTrail.transform.position = trailPosition;
+    }
+
+    private Vector3 GetMovementTrailPosition()
+    {
+        return discRigidbody.position - lastTrailDirection * trailBackOffset +
+               Vector3.up * trailHeightOffset;
+    }
+
+    private void StopMovementTrails(bool clearImmediately)
+    {
+        if (activeTravelTrail != null)
+        {
+            var trail = activeTravelTrail;
+            activeTravelTrail = null;
+            trail.Stop(clearImmediately);
+            ReleaseMovementTrail(trail.gameObject, trail.ReleaseDelay, clearImmediately);
+        }
+
+        if (activeStarTrail != null)
+        {
+            var stars = activeStarTrail;
+            activeStarTrail = null;
+            stars.Stop(clearImmediately);
+            ReleaseMovementTrail(stars.gameObject, stars.ReleaseDelay, clearImmediately);
+        }
+    }
+
+    private void ReleaseMovementTrail(GameObject instance, float delay, bool immediately)
+    {
+        if (instance == null)
+            return;
+
+        if (immediately || !isActiveAndEnabled)
+        {
+            if (PoolManager.Instance != null)
+                PoolManager.Instance.Despawn(instance);
+            return;
+        }
+
+        trailsAwaitingRelease.Add(instance);
+        StartCoroutine(ReturnMovementTrailAfterDelay(instance, delay));
+    }
+
+    private IEnumerator ReturnMovementTrailAfterDelay(GameObject instance, float delay)
+    {
+        yield return new WaitForSeconds(Mathf.Max(0.01f, delay));
+
+        trailsAwaitingRelease.Remove(instance);
+        if (instance != null && PoolManager.Instance != null)
+            PoolManager.Instance.Despawn(instance);
+    }
+
+    private void ReleaseAllMovementTrails()
+    {
+        StopMovementTrails(true);
+        StopAllCoroutines();
+
+        if (PoolManager.Instance != null)
+        {
+            foreach (var instance in trailsAwaitingRelease)
+            {
+                if (instance != null)
+                    PoolManager.Instance.Despawn(instance);
+            }
+        }
+
+        trailsAwaitingRelease.Clear();
     }
 
     private bool TryScreenToBoard(Vector2 screenPosition, out Vector3 worldPosition)
@@ -440,5 +603,6 @@ public class DiscShotController : MonoBehaviour
         minPullDistance = Mathf.Clamp(minPullDistance, 0f, maxPullDistance);
         maxLaunchSpeed = Mathf.Max(minLaunchSpeed, maxLaunchSpeed);
         indicatorMaxLength = Mathf.Max(indicatorMinLength, indicatorMaxLength);
+        trailBackOffset = Mathf.Max(0f, trailBackOffset);
     }
 }

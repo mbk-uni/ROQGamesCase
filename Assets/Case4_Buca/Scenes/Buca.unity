@@ -416,7 +416,13 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 301fbd4e6ede246d59ed532020f72b20, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::PoolManager
-  pools: []
+  pools:
+  - id: Sticker Star Trail
+    prefab: {fileID: 797396614967298007, guid: 5bc22c9cac908456d95e1e09d4ac4ea2, type: 3}
+    initialSize: 100
+  - id: Sticker Travel Trail
+    prefab: {fileID: 61001001, guid: c3513ba468b6a447eb117c02c99643a0, type: 3}
+    initialSize: 100
 --- !u!1001 &251600116
 PrefabInstance:
   m_ObjectHideFlags: 0
@@ -740,6 +746,12 @@ MonoBehaviour:
   indicatorWidth: 0.8
   indicatorStartOffset: 0.65
   indicatorHeightOffset: 0.08
+  launchSfxId: WooshSFX
+  launchSfxVolume: 1
+  travelTrailPoolId: Sticker Travel Trail
+  starTrailPoolId: Sticker Star Trail
+  trailBackOffset: 0.35
+  trailHeightOffset: 0.12
 --- !u!1 &297645757
 GameObject:
   m_ObjectHideFlags: 0
@@ -925,7 +937,11 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::AudioManager
   initialSourceCount: 8
-  sfx: []
+  sfx:
+  - id: WooshSFX
+    clip: {fileID: 8300000, guid: 095716b33f8954fffb8af27688e7c4dd, type: 3}
+    volume: 1
+    pitchRange: {x: 1, y: 1}
 --- !u!1 &330585543
 GameObject:
   m_ObjectHideFlags: 0
