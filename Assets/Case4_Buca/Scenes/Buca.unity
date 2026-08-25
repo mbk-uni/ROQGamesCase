@@ -418,7 +418,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::PoolManager
   pools:
   - id: Sticker Star Trail
-    prefab: {fileID: 797396614967298007, guid: 5bc22c9cac908456d95e1e09d4ac4ea2, type: 3}
+    prefab: {fileID: 5341051682571940947, guid: 0d7b40c444c8a49218f0349fbab9626b, type: 3}
     initialSize: 100
   - id: Sticker Travel Trail
     prefab: {fileID: 61001001, guid: c3513ba468b6a447eb117c02c99643a0, type: 3}
@@ -2702,7 +2702,7 @@ MonoBehaviour:
   settleAngularDamping: 0.22
   triggerOnce: 1
   radialVelocity: 15
-  upwardVelocity: 6
+  upwardVelocity: 8
   directionalInfluence: 0.35
   randomSpread: 0.5
   angularVelocity: 22
@@ -2761,8 +2761,8 @@ MonoBehaviour:
     m_PreInfinity: 2
     m_PostInfinity: 2
     m_RotationOrder: 4
-  planarDamping: 1
-  hardLimitRadius: 100
+  planarDamping: 0.1
+  hardLimitRadius: 6
   discSpeedRetention: 0.85
   impactColorGradient:
     serializedVersion: 2

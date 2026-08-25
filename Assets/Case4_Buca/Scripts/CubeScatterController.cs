@@ -226,8 +226,10 @@ public class CubeScatterController : MonoBehaviour
 
         foreach (var body in cubeBodies)
         {
-            if (body != null)
-                renderersByBody[body] = body.GetComponentsInChildren<Renderer>(true);
+            if (body == null)
+                continue;
+
+            renderersByBody[body] = body.GetComponentsInChildren<Renderer>(true);
         }
     }
 
