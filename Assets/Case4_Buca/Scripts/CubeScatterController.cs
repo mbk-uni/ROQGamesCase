@@ -26,6 +26,22 @@ public class CubeScatterController : MonoBehaviour
     [SerializeField, Min(0f)] private float waveDelayPerUnit = 0.025f;
     [SerializeField, Min(0f)] private float randomDelay = 0.012f;
 
+    [Header("Progressive Slowdown")]
+    [Tooltip("Scatter başladıktan sonra yavaşlamanın devreye girmesine kadar geçecek süre.")]
+    [SerializeField, Min(0f)] private float freeScatterDuration = 0.1f;
+    [Tooltip("Bu mesafenin içinde ekstra yavaşlama uygulanmaz.")]
+    [SerializeField, Min(0f)] private float slowdownStartRadius = 2f;
+    [Tooltip("Yavaşlatma kuvvetinin tam değere ulaştığı merkez mesafesi.")]
+    [SerializeField, Min(0.01f)] private float slowdownFullStrengthRadius = 3.5f;
+    [Tooltip("Tam güçte dışarı yönlü hızdan saniyede eksiltilecek miktar.")]
+    [SerializeField, Min(0f)] private float outwardDeceleration = 35f;
+    [Tooltip("Mesafeye göre yavaşlama şiddeti. 0 ters kuvvet üretmez; yalnızca mevcut hızı azaltır.")]
+    [SerializeField] private AnimationCurve distanceSlowdownCurve = AnimationCurve.EaseInOut(0f, 0f, 1f, 1f);
+    [Tooltip("Yavaşlama bölgesindeki XZ hızına uygulanan ek smooth damping.")]
+    [SerializeField, Min(0f)] private float planarDamping = 1f;
+    [Tooltip("Güvenlik sınırı. Aşılırsa yalnızca dışarı yönlü hız sıfırlanır.")]
+    [SerializeField, Min(0.01f)] private float hardLimitRadius = 4.5f;
+
     [Header("Disc")]
     [Tooltip("Scatter ilk kez tetiklendiğinde disc hızının korunacak oranı.")]
     [SerializeField, Range(0f, 1f)] private float discSpeedRetention = 0.85f;
@@ -44,6 +60,8 @@ public class CubeScatterController : MonoBehaviour
     private MaterialPropertyBlock colorProperties;
     private bool hasTriggered;
     private bool isScattering;
+    private Vector3 slowdownCenter;
+    private float scatterStartedTime;
 
     private static readonly int BaseColorId = Shader.PropertyToID("_BaseColor");
     private static readonly int ColorId = Shader.PropertyToID("_Color");
@@ -73,6 +91,9 @@ public class CubeScatterController : MonoBehaviour
         if (distanceFalloff == null || distanceFalloff.length == 0)
             distanceFalloff = AnimationCurve.Linear(0f, 1f, 1f, 0.45f);
 
+        if (distanceSlowdownCurve == null || distanceSlowdownCurve.length == 0)
+            distanceSlowdownCurve = AnimationCurve.EaseInOut(0f, 0f, 1f, 1f);
+
         if (impactColorGradient == null)
             impactColorGradient = CreateDefaultImpactGradient();
 
@@ -85,13 +106,18 @@ public class CubeScatterController : MonoBehaviour
         if (!hasTriggered)
             return;
 
+        var slowdownIsActive = Time.time >= scatterStartedTime + freeScatterDuration;
         var maximumSpeedSqr = maximumCubeSpeed * maximumCubeSpeed;
         foreach (var body in cubeBodies)
         {
-            if (body == null || body.linearVelocity.sqrMagnitude <= maximumSpeedSqr)
+            if (body == null)
                 continue;
 
-            body.linearVelocity = body.linearVelocity.normalized * maximumCubeSpeed;
+            if (slowdownIsActive)
+                ApplyProgressiveSlowdown(body);
+
+            if (body.linearVelocity.sqrMagnitude > maximumSpeedSqr)
+                body.linearVelocity = body.linearVelocity.normalized * maximumCubeSpeed;
         }
     }
 
@@ -106,6 +132,8 @@ public class CubeScatterController : MonoBehaviour
         if (cubeBodies.Count == 0)
             return false;
 
+        UpdateSlowdownCenter();
+        scatterStartedTime = Time.time;
         hasTriggered = true;
         isScattering = true;
         StartCoroutine(ScatterRoutine(impactPoint, discVelocity));
@@ -203,6 +231,68 @@ public class CubeScatterController : MonoBehaviour
         }
     }
 
+    private void UpdateSlowdownCenter()
+    {
+        var centerSum = Vector3.zero;
+        var validBodyCount = 0;
+
+        foreach (var body in cubeBodies)
+        {
+            if (body == null)
+                continue;
+
+            centerSum += body.worldCenterOfMass;
+            validBodyCount++;
+        }
+
+        slowdownCenter = validBodyCount > 0 ? centerSum / validBodyCount : transform.position;
+    }
+
+    private void ApplyProgressiveSlowdown(Rigidbody body)
+    {
+        var offsetFromCenter = body.worldCenterOfMass - slowdownCenter;
+        offsetFromCenter.y = 0f;
+        var distanceFromCenter = offsetFromCenter.magnitude;
+        if (distanceFromCenter <= slowdownStartRadius || distanceFromCenter <= 0.0001f)
+            return;
+
+        var outwardDirection = offsetFromCenter / distanceFromCenter;
+        var velocity = body.linearVelocity;
+        var planarVelocity = new Vector3(velocity.x, 0f, velocity.z);
+
+        var normalizedDistance = Mathf.InverseLerp(
+            slowdownStartRadius,
+            slowdownFullStrengthRadius,
+            distanceFromCenter);
+        var slowdownStrength = Mathf.Clamp01(distanceSlowdownCurve.Evaluate(normalizedDistance));
+
+        if (planarDamping > 0f && slowdownStrength > 0f)
+            planarVelocity *= Mathf.Exp(-planarDamping * slowdownStrength * Time.fixedDeltaTime);
+
+        var outwardSpeed = Vector3.Dot(planarVelocity, outwardDirection);
+        if (outwardSpeed > 0f)
+        {
+            var slowedOutwardSpeed = Mathf.MoveTowards(
+                outwardSpeed,
+                0f,
+                outwardDeceleration * slowdownStrength * Time.fixedDeltaTime);
+            planarVelocity += outwardDirection * (slowedOutwardSpeed - outwardSpeed);
+        }
+
+        if (distanceFromCenter > hardLimitRadius)
+        {
+            var clampedPosition = slowdownCenter + outwardDirection * hardLimitRadius;
+            var currentPosition = body.position;
+            body.position = new Vector3(clampedPosition.x, currentPosition.y, clampedPosition.z);
+
+            var remainingOutwardSpeed = Vector3.Dot(planarVelocity, outwardDirection);
+            if (remainingOutwardSpeed > 0f)
+                planarVelocity -= outwardDirection * remainingOutwardSpeed;
+        }
+
+        body.linearVelocity = new Vector3(planarVelocity.x, velocity.y, planarVelocity.z);
+    }
+
     private void StartColorTransition(Rigidbody body)
     {
         if (body == null)
@@ -275,6 +365,12 @@ public class CubeScatterController : MonoBehaviour
     {
         cubeMass = Mathf.Max(0.001f, cubeMass);
         maximumCubeSpeed = Mathf.Max(0.01f, maximumCubeSpeed);
+        freeScatterDuration = Mathf.Max(0f, freeScatterDuration);
+        slowdownStartRadius = Mathf.Max(0f, slowdownStartRadius);
+        slowdownFullStrengthRadius = Mathf.Max(slowdownStartRadius + 0.01f, slowdownFullStrengthRadius);
+        outwardDeceleration = Mathf.Max(0f, outwardDeceleration);
+        planarDamping = Mathf.Max(0f, planarDamping);
+        hardLimitRadius = Mathf.Max(slowdownFullStrengthRadius + 0.01f, hardLimitRadius);
         colorTransitionStartDelay = Mathf.Max(0f, colorTransitionStartDelay);
         colorTransitionDuration = Mathf.Max(0.01f, colorTransitionDuration);
     }
