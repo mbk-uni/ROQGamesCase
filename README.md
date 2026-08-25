@@ -34,6 +34,9 @@ Case1_FitTheShape/Scripts klasöründe oyunda kullanılan genel PoolManager ve A
 - Caselerde kullanılan VFX'leri ilgili case'in VFX klasöründe bulabilirsiniz.
 - FitTheShape, BlockHole ve Stickerdom caselerinin SFX'leri case için gönderilen videolardan ses exportu yoluyla elde edilmiştir. Buca case'i için diskin fırlatılma SFX'i şu linkten alınmıştır: https://www.youtube.com/watch?v=pqEn9icjK0I
 
+## Editor
 
+- Caselerdeki ilgili intrectationlara kolayca ulaşılabilmesi için custom editor tool yazılmıştır. Play tuşunun solunda case sahnelerine götüren ilgili butonlar yer almaktadır.
+- Ayrıca runtimeda Timescale'i editörden kontrol etmenizi sağlayan küçük bir dropdown menü de custom olarak eklenmiştir. Bu tool ilgili intrectionları hazırlarken daha hassas çalışılabilmesi amacıyla yazılmıştır. 
 
 
