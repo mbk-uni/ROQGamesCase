@@ -18,11 +18,11 @@ material, prefab vb. tüm dosyalar kendi case klasöründedir.
       Case3_Stickerdom/    → Materials, Prefabs, Sprites (sticker + ghost), Textures, VFX, Scenes, SFX, Scripts, Shaders
       Case4_Buca/          → Materials, Textures, Prefabs (lane/hole/puck/green blocks + fractured), VFX, Scenes, SFX, Scripts
 
-Her case klasöründeki `Scenes/` altındaki ilgili sahnede case'e uygun olarak hazırlanmış intrectionı deneyimleyebilirsiniz.
+Her case klasörlerinde `Scenes/` altındaki ilgili sahnede case'e uygun olarak hazırlanmış intrectionı deneyimleyebilirsiniz.
 
 Scripts klasöründe genelde gerekli görülmediği için alt klasör detaylandırmasına gidilmemiştir.
 
-Case1_FitTheShape/Scripts klasöründe oyunda kullanılan genel PoolManager ve AudioManager dosyaları 'Managers/' klasörü altına alınmıştır. Bu 2 script 4 case içinde kullanılmıştır.
+`Case1_FitTheShape/Scripts` klasöründe oyunda kullanılan genel PoolManager ve AudioManager dosyaları `Managers/` klasörü altına alınmıştır. Bu 2 script 4 case içinde kullanılmıştır.
 
 ## Üçüncü parti paketler
 
