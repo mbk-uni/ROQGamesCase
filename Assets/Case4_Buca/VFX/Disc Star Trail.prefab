@@ -13,7 +13,7 @@ GameObject:
   - component: {fileID: 2304933390284461294}
   - component: {fileID: 5090407902395912461}
   m_Layer: 0
-  m_Name: Sticker Star Trail
+  m_Name: Disc Star Trail
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0

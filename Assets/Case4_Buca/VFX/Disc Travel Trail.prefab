@@ -12,7 +12,7 @@ GameObject:
   - component: {fileID: 96001001}
   - component: {fileID: 114001001}
   m_Layer: 0
-  m_Name: Sticker Travel Trail
+  m_Name: Disc Travel Trail
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
