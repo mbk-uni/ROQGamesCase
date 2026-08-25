@@ -12,7 +12,7 @@ namespace Game.Editor
     /// <summary>
     /// Adds a runtime Time.timeScale selector alongside Unity's Play controls.
     /// </summary>
-    internal static class PlayModeTimeScaleToolbar
+    internal static class CustomEditorTool
     {
         private const string PlayModeControlsPath = "Play Mode Controls";
         private const string GameSceneButtonName = "FitTheShape";
