@@ -1,4 +1,4 @@
-# ROQ Games — Game Developer Case
+# ROQ Games — Game Developer Case - Bilal Kayi
 
 Bu repo, Game Developer Case dokümanında tarif edilen 4 kısa gameplay intreactionı içermektedir.
 
